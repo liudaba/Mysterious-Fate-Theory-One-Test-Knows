@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>玩游戏的猴子</title>
+    <title>吃香蕉做鬼脸的猴子</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #FFD700 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,48 +26,51 @@
             height: 500px;
         }
 
-        /* 电视/显示器 */
-        .tv {
+        /* 香蕉 */
+        .banana {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 140px;
-            background: #2d2d2d;
+            top: -30px;
+            left: -60px;
+            transform: rotate(-30deg);
+            animation: bananaBite 1.5s ease-in-out infinite;
+            z-index: 20;
+        }
+
+        .banana-body {
+            width: 80px;
+            height: 25px;
+            background: linear-gradient(to bottom, #FFE135 0%, #FFD700 50%, #FFC107 100%);
+            border-radius: 50px 50px 20px 20px;
+            position: relative;
+            transform: rotate(-20deg);
+            box-shadow: inset 0 -3px 0 #E6B800;
+        }
+
+        .banana-body::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 5px;
+            width: 70px;
+            height: 8px;
+            background: #8B4513;
             border-radius: 10px;
-            border: 8px solid #1a1a1a;
-            overflow: hidden;
+            transform: rotate(5deg);
         }
 
-        .tv-screen {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            animation: screenFlicker 0.1s infinite alternate;
-        }
-
-        .tv-screen::before {
-            content: "🎮 GAME";
+        .banana-tip {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            animation: textBounce 0.5s ease-in-out infinite;
+            right: -8px;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            background: #4a3728;
+            border-radius: 50%;
         }
 
-        @keyframes screenFlicker {
-            0% { opacity: 0.95; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes textBounce {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
+        @keyframes bananaBite {
+            0%, 100% { transform: rotate(-30deg) translateY(0); }
+            50% { transform: rotate(-20deg) translateY(-15px) translateX(10px); }
         }
 
         /* 猴子身体 */
@@ -132,40 +135,45 @@
         .ear.left { left: -15px; }
         .ear.right { right: -15px; }
 
-        /* 眼睛 */
+        /* 眼睛 - 做鬼脸 */
         .eyes {
             position: absolute;
-            top: 35px;
+            top: 30px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 20px;
+            gap: 25px;
         }
 
         .eye {
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
             background: white;
             border-radius: 50%;
             position: relative;
             overflow: hidden;
+            animation: eyeSquint 2s ease-in-out infinite;
+        }
+
+        .eye.left {
+            animation: wink 3s ease-in-out infinite;
         }
 
         .pupil {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: #222;
             border-radius: 50%;
             position: absolute;
-            top: 5px;
-            left: 5px;
-            animation: eyeMove 2s ease-in-out infinite;
+            top: 7px;
+            left: 7px;
+            animation: crazyEye 1s ease-in-out infinite;
         }
 
         .pupil::after {
             content: '';
-            width: 4px;
-            height: 4px;
+            width: 5px;
+            height: 5px;
             background: white;
             border-radius: 50%;
             position: absolute;
@@ -173,11 +181,53 @@
             left: 2px;
         }
 
-        @keyframes eyeMove {
-            0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(3px, -2px); }
-            50% { transform: translate(-3px, -2px); }
-            75% { transform: translate(0, 2px); }
+        @keyframes crazyEye {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(5px, -3px) scale(1.1); }
+            50% { transform: translate(-5px, 3px) scale(0.9); }
+            75% { transform: translate(3px, 2px) scale(1.05); }
+        }
+
+        @keyframes wink {
+            0%, 40%, 60%, 100% { height: 28px; }
+            45%, 55% { height: 3px; }
+        }
+
+        @keyframes eyeSquint {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.8); }
+        }
+
+        /* 眉毛 - 做鬼脸 */
+        .eyebrows {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 35px;
+        }
+
+        .eyebrow {
+            width: 20px;
+            height: 6px;
+            background: #5D3A1A;
+            border-radius: 10px;
+        }
+
+        .eyebrow.left {
+            transform: rotate(-20deg);
+            animation: browWiggle 1.5s ease-in-out infinite;
+        }
+
+        .eyebrow.right {
+            transform: rotate(20deg);
+            animation: browWiggle 1.5s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes browWiggle {
+            0%, 100% { transform: rotate(-20deg) translateY(0); }
+            50% { transform: rotate(-30deg) translateY(-5px); }
         }
 
         /* 鼻子 */
@@ -204,23 +254,58 @@
         .nostril.left { left: 4px; }
         .nostril.right { right: 4px; }
 
-        /* 嘴巴 */
+        /* 嘴巴 - 吃香蕉 + 做鬼脸 */
         .mouth {
             position: absolute;
-            width: 30px;
-            height: 15px;
-            border: 3px solid #5D3A1A;
-            border-top: none;
-            border-radius: 0 0 20px 20px;
-            top: 72px;
+            width: 40px;
+            height: 25px;
+            background: #8B0000;
+            border-radius: 5px 5px 20px 20px;
+            top: 68px;
             left: 50%;
             transform: translateX(-50%);
-            animation: mouthOpen 0.8s ease-in-out infinite;
+            animation: mouthChomp 1.5s ease-in-out infinite;
+            overflow: visible;
         }
 
-        @keyframes mouthOpen {
-            0%, 100% { height: 15px; }
-            50% { height: 20px; }
+        @keyframes mouthChomp {
+            0%, 100% { height: 25px; width: 40px; }
+            50% { height: 35px; width: 45px; }
+        }
+
+        /* 舌头 */
+        .tongue {
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            background: #FF6B6B;
+            border-radius: 50% 50% 50% 50%;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: tongueWag 0.5s ease-in-out infinite;
+        }
+
+        @keyframes tongueWag {
+            0%, 100% { transform: translateX(-50%) rotate(-10deg); }
+            50% { transform: translateX(-50%) rotate(10deg); }
+        }
+
+        /* 牙齿 */
+        .teeth {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+        }
+
+        .tooth {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 0 0 3px 3px;
         }
 
         /* 身体 */
@@ -257,23 +342,23 @@
         .arm.left {
             left: -20px;
             transform-origin: top center;
-            animation: leftArmMove 0.3s ease-in-out infinite;
+            animation: leftArmBanana 1.5s ease-in-out infinite;
         }
 
         .arm.right {
             right: -20px;
             transform-origin: top center;
-            animation: rightArmMove 0.3s ease-in-out infinite 0.15s;
+            animation: rightArmWave 1s ease-in-out infinite;
         }
 
-        @keyframes leftArmMove {
-            0%, 100% { transform: rotate(-15deg); }
-            50% { transform: rotate(-25deg); }
+        @keyframes leftArmBanana {
+            0%, 100% { transform: rotate(-60deg); }
+            50% { transform: rotate(-80deg); }
         }
 
-        @keyframes rightArmMove {
-            0%, 100% { transform: rotate(15deg); }
-            50% { transform: rotate(25deg); }
+        @keyframes rightArmWave {
+            0%, 100% { transform: rotate(30deg); }
+            50% { transform: rotate(-10deg); }
         }
 
         /* 手 */
@@ -288,54 +373,51 @@
             transform: translateX(-50%);
         }
 
-        /* 游戏手柄 */
-        .controller {
+        /* 香蕉皮掉落效果 */
+        .banana-peels {
             position: absolute;
-            bottom: 70px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90px;
-            height: 45px;
-            background: #333;
-            border-radius: 10px 10px 25px 25px;
-            border: 3px solid #222;
-            z-index: 10;
-            animation: controllerShake 0.2s ease-in-out infinite;
         }
 
-        @keyframes controllerShake {
-            0%, 100% { transform: translateX(-50%) rotate(0deg); }
-            25% { transform: translateX(-50%) rotate(-1deg); }
-            75% { transform: translateX(-50%) rotate(1deg); }
-        }
-
-        .controller::before {
-            content: '';
+        .peel {
             position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #444;
-            border-radius: 50%;
-            top: 10px;
-            left: 8px;
+            font-size: 30px;
+            animation: peelFall 3s ease-in infinite;
         }
 
-        .controller::after {
-            content: '';
+        .peel:nth-child(1) { left: -80px; animation-delay: 0s; }
+        .peel:nth-child(2) { left: 50px; animation-delay: 1.5s; }
+
+        @keyframes peelFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+        }
+
+        /* 腮红 */
+        .cheeks {
             position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #ff4444;
-            border-radius: 50%;
-            top: 12px;
-            right: 18px;
-            box-shadow: 12px 0 0 #44ff44, 0 12px 0 #4444ff, 12px 12px 0 #ffff44;
-            animation: buttonPress 0.15s ease-in-out infinite;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 50px;
         }
 
-        @keyframes buttonPress {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        .cheek {
+            width: 15px;
+            height: 10px;
+            background: #FF9999;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: blush 2s ease-in-out infinite;
+        }
+
+        @keyframes blush {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.2); }
         }
 
         /* 腿 */
@@ -400,6 +482,8 @@
         .star:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
         .star:nth-child(2) { top: 15%; right: 15%; animation-delay: 0.5s; }
         .star:nth-child(3) { top: 5%; left: 50%; animation-delay: 1s; }
+        .star:nth-child(4) { top: 25%; left: 5%; animation-delay: 0.3s; }
+        .star:nth-child(5) { top: 20%; right: 5%; animation-delay: 0.8s; }
 
         @keyframes starFloat {
             0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
@@ -422,10 +506,7 @@
 </head>
 <body>
     <div class="scene">
-        <!-- 电视 -->
-        <div class="tv">
-            <div class="tv-screen"></div>
-        </div>
+
 
         <!-- 猴子 -->
         <div class="monkey">
@@ -434,27 +515,52 @@
                 <div class="ear left"></div>
                 <div class="ear right"></div>
                 <div class="face">
+                    <div class="eyebrows">
+                        <div class="eyebrow left"></div>
+                        <div class="eyebrow right"></div>
+                    </div>
                     <div class="eyes">
-                        <div class="eye"><div class="pupil"></div></div>
-                        <div class="eye"><div class="pupil"></div></div>
+                        <div class="eye left"><div class="pupil"></div></div>
+                        <div class="eye right"><div class="pupil"></div></div>
+                    </div>
+                    <div class="cheeks">
+                        <div class="cheek"></div>
+                        <div class="cheek"></div>
                     </div>
                     <div class="nose">
                         <div class="nostril left"></div>
                         <div class="nostril right"></div>
                     </div>
-                    <div class="mouth"></div>
+                    <div class="mouth">
+                        <div class="teeth">
+                            <div class="tooth"></div>
+                            <div class="tooth"></div>
+                            <div class="tooth"></div>
+                        </div>
+                        <div class="tongue"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- 身体 -->
             <div class="body">
                 <div class="belly"></div>
-                <div class="arm left"><div class="hand"></div></div>
+                <div class="arm left">
+                    <div class="hand"></div>
+                    <div class="banana">
+                        <div class="banana-body">
+                            <div class="banana-tip"></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="arm right"><div class="hand"></div></div>
             </div>
 
-            <!-- 游戏手柄 -->
-            <div class="controller"></div>
+            <!-- 香蕉皮 -->
+            <div class="banana-peels">
+                <span class="peel">🍌</span>
+                <span class="peel">🍌</span>
+            </div>
 
             <!-- 腿 -->
             <div class="legs">
@@ -468,12 +574,14 @@
 
         <!-- 兴奋的星星 -->
         <div class="stars">
-            <span class="star">⭐</span>
+            <span class="star">🍌</span>
             <span class="star">✨</span>
+            <span class="star">😜</span>
+            <span class="star">🐒</span>
             <span class="star">🌟</span>
         </div>
 
-        <div class="title">🎮 专注玩游戏的小猴子 🐵</div>
+        <div class="title">🍌 吃香蕉做鬼脸的小猴子 😜</div>
     </div>
 </body>
 </html>
