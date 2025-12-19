@@ -703,24 +703,40 @@ class MysteryFortuneApp:
             color = "#e67e22"
             desc = "二人性格有所冲突，需要更多沟通与理解，建议婚前多加考虑。"
         
+        # 创建可滚动区域
+        canvas = tk.Canvas(self.match_result, bg=self.colors['bg_hover'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.match_result, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_hover'])
+        
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=720)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
         # 显示结果
-        tk.Label(self.match_result, text=f"💑 {male} ❤ {female}", 
-                font=("Microsoft YaHei", 18, "bold"),
-                fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=20)
+        tk.Label(scroll_frame, text=f"💑 {male} ❤ {female}", 
+                font=("Microsoft YaHei", 16, "bold"),
+                fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=(10, 5))
         
         # 契合度圆环效果
-        score_frame = tk.Frame(self.match_result, bg=self.colors['bg_hover'])
-        score_frame.pack(pady=10)
+        score_frame = tk.Frame(scroll_frame, bg=self.colors['bg_hover'])
+        score_frame.pack(pady=5)
         
-        tk.Label(score_frame, text=f"{score}", font=("Arial", 56, "bold"),
+        tk.Label(score_frame, text=f"{score}", font=("Arial", 36, "bold"),
                 fg=color, bg=self.colors['bg_hover']).pack()
         tk.Label(score_frame, text="契合指数", font=("Microsoft YaHei", 12),
                 fg=self.colors['text_dim'], bg=self.colors['bg_hover']).pack()
         
-        tk.Label(self.match_result, text=level, font=("Microsoft YaHei", 20, "bold"),
-                fg=color, bg=self.colors['bg_hover']).pack(pady=10)
+        tk.Label(scroll_frame, text=level, font=("Microsoft YaHei", 18, "bold"),
+                fg=color, bg=self.colors['bg_hover']).pack(pady=5)
         
-        tk.Label(self.match_result, text=desc, font=("Microsoft YaHei", 12),
+        tk.Label(scroll_frame, text=desc, font=("Microsoft YaHei", 12),
                 fg=self.colors['text'], bg=self.colors['bg_hover'],
                 wraplength=500).pack(pady=10)
         
@@ -732,7 +748,7 @@ class MysteryFortuneApp:
             ("财运互补", random.randint(70, 90)),
         ]
         
-        detail_frame = tk.Frame(self.match_result, bg=self.colors['bg_card'])
+        detail_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
         detail_frame.pack(fill=tk.X, padx=40, pady=20)
         
         for i, (name, val) in enumerate(details):
@@ -748,6 +764,11 @@ class MysteryFortuneApp:
             
             tk.Label(detail_frame, text=f"{val}%", font=("Microsoft YaHei", 10, "bold"),
                     fg=self.colors['gold'], bg=self.colors['bg_card']).grid(row=i, column=2, padx=10)
+        
+        # 底部结束语
+        tk.Label(scroll_frame, text="✨ 愿有情人终成眷属 ✨", 
+                font=("Microsoft YaHei", 11, "bold"),
+                fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=15)
     
     def show_taboos(self):
         self.clear_content()
