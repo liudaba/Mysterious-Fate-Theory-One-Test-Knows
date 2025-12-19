@@ -570,6 +570,82 @@ function init() {
 }
 
 // 算命测算
+function getLifeReadings(dayWx, isStrong) {
+    const lifeReadings = {
+        '木': {
+            true: [
+                '【综合命运】日主甲木身旺，如参天大树，生命力旺盛。一生性格刚正不阿，有领导才能，适合担任管理者角色。',
+                '【少年运势】（1-25岁）少年时期学业顺利，聪明好学，但性格较为倒强，需注意与人相处的方式方法。',
+                '【中年运势】（26-50岁）中年事业有成，财运亨通，但木旺克土，需注意婚姻家庭的经营，避免因事业而忽视家人。',
+                '【晚年运势】（51岁后）晚年安康，子孙孝顺，可享天伦之乐。注意肝胆保养，适当运动。'
+            ],
+            false: [
+                '【综合命运】日主甲木身弱，如幼苗需水木滋养。一生性格温和，善于合作，适合团队工作，借助贵人之力发展。',
+                '【少年运势】（1-25岁）少年时期可能较为艰苦，需要努力学习，多依靠父母帮助。',
+                '【中年运势】（26-50岁）中年运势渐入佳境，遇贵人相助，事业有成。婚姻缘分来得稍晚，但质量高。',
+                '【晚年运势】（51岁后）晚年子孙孝顺，大器晚成，可享清福。注意肝胆、筋骨保养。'
+            ]
+        },
+        '火': {
+            true: [
+                '【综合命运】日主丙火身旺，如日中天，光明磊落，热情开朗。具有领袖气质，事业心强，年轻时即有成就。',
+                '【少年运势】（1-25岁）少年时期活泼好动，学业表现突出，但性格急躁，需修身养性。',
+                '【中年运势】（26-50岁）中年事业达高峰，名利双收。但火旺则燥，需水来济，宜多与水型人合作。',
+                '【晚年运势】（51岁后）晚年子孙有出息，家庭和睦。注意心血管保养，忌暴躁。'
+            ],
+            false: [
+                '【综合命运】日主丙火身弱，如烛火微弱，需木来生扶。性格温和，善于交际，人缘极佳。',
+                '【少年运势】（1-25岁）少年时期需贵人提携，依靠家庭扶持，学业平稳。',
+                '【中年运势】（26-50岁）中年运势渐佳，适合公关、销售类工作。财运平稳，不宜冒险投资。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意心脏、血压保养。'
+            ]
+        },
+        '土': {
+            true: [
+                '【综合命运】日主戊土身旺，如山岳稳重，诚实守信，有担当。但过于固执，需注意灵活变通。',
+                '【少年运势】（1-25岁）少年时期性格踏实，学业稳定，但不够灵活，需多拓展视野。',
+                '【中年运势】（26-50岁）中年事业稳定，适合政府、国企、教育等行业。财运稳健，积蓄渐丰。',
+                '【晚年运势】（51岁后）晚年安稳，子孙孝顺，家业兴旺。注意脾胃保养。'
+            ],
+            false: [
+                '【综合命运】日主戊土身弱，如田园乏水，需火土生扶。性格随和，包容性强，人缘好。',
+                '【少年运势】（1-25岁）少年时期需依靠家庭，学业较为平常，但能吃苦耐劳。',
+                '【中年运势】（26-50岁）中年后运势渐入佳境，大器晚成。适合稳定的工作环境。',
+                '【晚年运势】（51岁后）晚年福泽深厚，子孙满堂，家庄和睦。注意肠胃保养。'
+            ]
+        },
+        '金': {
+            true: [
+                '【综合命运】日主庚金身旺，如刃剑出鞘，果断刚毅。适合武职、法律、金融等行业。',
+                '【少年运势】（1-25岁）少年时期性格要强，学业表现突出，但需注意人际关系。',
+                '【中年运势】（26-50岁）中年事业有成，正财运佳。但金旺克木太过，宜注意家庭和谐。',
+                '【晚年运势】（51岁后）晚年安康，子孙孝顺。注意肺部、呼吸系统保养。'
+            ],
+            false: [
+                '【综合命运】日主庚金身弱，如饰品小巧，需土金生扶。心思细密，善于策划，适合幕后工作。',
+                '【少年运势】（1-25岁）少年时期需依靠家庭扶持，学业平稳，善于思考。',
+                '【中年运势】（26-50岁）中年运势渐佳，适合技术、管理岗位。财运需耐心经营，稳中求进。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭和睦。注意肺部、皮肤保养。'
+            ]
+        },
+        '水': {
+            true: [
+                '【综合命运】日主壬水身旺，如江河汹涌，智慧过人，变通能力强。适合研究、写作、咨询等智力工作。',
+                '【少年运势】（1-25岁）少年时期聪明过人，学业优异，但思绪不定，需专注。',
+                '【中年运势】（26-50岁）中年事业有成，有海外发展运。但水旺则泛，需土来制，宜与土型人合作。',
+                '【晚年运势】（51岁后）晚年智慧不减，可发挥余热。注意肾脏、泰尿系统保养。'
+            ],
+            false: [
+                '【综合命运】日主壬水身弱，如源头细流，需金水生扶。性格温顺，适应力强，人缘好。',
+                '【少年运势】（1-25岁）少年时期需家庭扶持，学业平稳，但善于适应环境。',
+                '【中年运势】（26-50岁）中年运势渐佳，需贵人提携，合作经营为佳。婚姻和美。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意肾脏、注意保暖。'
+            ]
+        }
+    };
+    return lifeReadings[dayWx] ? lifeReadings[dayWx][isStrong] : lifeReadings['木'][true];
+}
+
 function calculateFortune() {
     const year = parseInt(document.getElementById('birthYear').value);
     const month = parseInt(document.getElementById('birthMonth').value);
@@ -637,8 +713,38 @@ function calculateFortune() {
     const yearGz = tiangan[(curYear-4)%10] + dizhi[(curYear-4)%12] + '年';
     const yearWx = ganWx[tiangan[(curYear-4)%10]];
     let yearLuck = '平常', luckColor = 'var(--orange)';
-    if (xiShen.includes(yearWx)) { yearLuck = '大吉'; luckColor = 'var(--gold)'; }
-    else if (yearWx === dayWx) { yearLuck = '平稳'; luckColor = 'var(--green)'; }
+    let yearSummary, yearDetails;
+    if (xiShen.includes(yearWx)) {
+        yearLuck = '大吉';
+        luckColor = 'var(--gold)';
+        yearSummary = '流年为喜用神，诸事顺遂，可积极进取。';
+        yearDetails = [
+            '💰 财运：财运亨通，正财偏财皆有机会，可适当投资理财，但不宜贪心。',
+            '🏢 事业：工作顺利，有贵人相助，适合拓展业务或谋求晋升。',
+            '💗 感情：单身者有望遇良缘，已婚者感情和睦，家庭美满。',
+            '🎯 健康：身体状况良好，但仍需注意作息规律，勿过度劳累。'
+        ];
+    } else if (yearWx === dayWx) {
+        yearLuck = '平稳';
+        luckColor = 'var(--green)';
+        yearSummary = '流年与日主同元，运势平稳，宜守不宜攻。';
+        yearDetails = [
+            '💰 财运：收入稳定，正财为主，不宜投机冒险，稳健理财为宜。',
+            '🏢 事业：工作按部就班，不宜贸然跳槽或创业，守住本职为上。',
+            '💗 感情：感情平淡，需用心经营，多与伴侣沟通交流。',
+            '🎯 健康：注意肠胃保养，饮食宜清淡，保持适当运动。'
+        ];
+    } else {
+        yearLuck = '平常';
+        luckColor = 'var(--orange)';
+        yearSummary = '流年与命局有冲，宜谨慎行事，避免重大决策。';
+        yearDetails = [
+            '💰 财运：财运波动，忌贪忌投机，守住现有钱财，勿轻信他人。',
+            '🏢 事业：工作中可能遇到小人或阻碍，宜低调做事，不争风头。',
+            '💗 感情：感情易有波折，多包容理解，避免争吵。',
+            '🎯 健康：注意安全，谨防意外，定期体检，预防为主。'
+        ];
+    }
     
     // 渲染结果
     const wxColors = {金:'wuxing-jin',木:'wuxing-mu',水:'wuxing-shui',火:'wuxing-huo',土:'wuxing-tu'};
@@ -690,11 +796,21 @@ function calculateFortune() {
         </div>
         
         <div class="card">
-            <div class="card-title">⑤ 流年运势</div>
+            <div class="card-title">⑤ 流年运势分析</div>
             <div style="text-align:center;">
-                <div style="font-size:1.1rem;">📅 ${yearGz}（${yearWx}）</div>
-                <div style="font-size:1.3rem; font-weight:bold; color:${luckColor}; margin:10px 0;">${yearLuck}</div>
+                <div style="font-size:1.1rem;">📅 ${yearGz}（${yearWx}）：<span style="color:${luckColor}; font-weight:bold;">${yearLuck}</span></div>
+                <div style="font-size:0.9rem; color:var(--text-dim); margin:8px 0;">${yearSummary}</div>
             </div>
+            <div style="text-align:left; padding:10px 5px;">
+                ${yearDetails.map(d => `<div style="padding:5px 0; font-size:0.85rem;">● ${d}</div>`).join('')}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">⑥ 一生命运概述</div>
+            <div style="font-size:0.85rem; color:var(--purple-light); padding:5px 0;">您的日主为${dayGan}（属${dayWx}），${isStrong ? '身旺' : '身弱'}，喜用神为${xiShen.join('、')}，忌神为${jiShen.join('、')}。</div>
+            ${getLifeReadings(dayWx, isStrong).map(r => `<div class="reading-item">● ${r}</div>`).join('')}
+            <div style="font-size:0.8rem; color:var(--text-dim); margin-top:10px;">📚 命理依据：本分析基于《渊海子平》《三命通会》《子平真诠》等古典命理典籍，结合日主五行旺衰、喜忌神等因素综合分析。</div>
         </div>
         
         <div class="hint-text">✨ 命由天定，运由己造，以上仅供参考 ✨</div>
