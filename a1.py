@@ -842,9 +842,75 @@ class MysteryFortuneApp:
                 fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=20)
     
     def get_lunar_date(self, date):
-        # 简化的农历计算（实际应用需要更精确的算法）
-        month_idx = (date.month + date.day // 15) % 12
-        day_idx = (date.day + 10) % 30
+        # 2025年农历基准：2025年1月29日 = 农历乙巳年正月初一
+        # 2025年闰六月
+        
+        # 先检查是否是2025年，使用精确的硬编码数据
+        if date.year == 2025:
+            # 2025年每月天数: 正月30, 二月29, 三月30, 四月29, 五月30, 六月29, 闰六月29, 七月30, 八月29, 九月30, 十月30, 冬月29, 腊月30
+            lunar_2025 = [
+                (1, 30, False), (2, 29, False), (3, 30, False), (4, 29, False),
+                (5, 30, False), (6, 29, False), (6, 29, True),  # 闰六月
+                (7, 30, False), (8, 29, False), (9, 30, False), (10, 30, False),
+                (11, 29, False), (12, 30, False)
+            ]
+            
+            # 2025年1月29日 = 正月初一
+            base_2025 = datetime(2025, 1, 29)
+            offset = (date - base_2025).days
+            
+            if offset < 0:
+                # 2025年1月29日之前属于2024年农历
+                return self._get_lunar_2024(date)
+            
+            # 计算农历月日
+            day_count = 0
+            for month_num, days, is_leap in lunar_2025:
+                if offset < day_count + days:
+                    lunar_day = offset - day_count + 1
+                    month_str = self.lunar_months[month_num - 1]
+                    if is_leap:
+                        month_str = "闰" + month_str
+                    day_str = self.lunar_days[lunar_day - 1] if lunar_day <= 30 else "三十"
+                    return f"{month_str}{day_str}"
+                day_count += days
+            
+            # 超出2025年范围
+            return "日期超出范围"
+        
+        elif date.year == 2024:
+            return self._get_lunar_2024(date)
+        else:
+            # 其他年份使用简化计算
+            return self._get_lunar_general(date)
+    
+    def _get_lunar_2024(self, date):
+        # 2024年农历基准：2024年2月10日 = 农历甲辰年正月初一
+        # 2024年无闰月
+        lunar_2024 = [
+            (1, 30), (2, 30), (3, 29), (4, 30), (5, 29), (6, 30),
+            (7, 29), (8, 30), (9, 29), (10, 30), (11, 29), (12, 30)
+        ]
+        
+        base_2024 = datetime(2024, 2, 10)
+        offset = (date - base_2024).days
+        
+        if offset < 0:
+            return "日期超出范围"
+        
+        day_count = 0
+        for month_num, days in lunar_2024:
+            if offset < day_count + days:
+                lunar_day = offset - day_count + 1
+                return f"{self.lunar_months[month_num - 1]}{self.lunar_days[lunar_day - 1]}"
+            day_count += days
+        
+        return "日期超出范围"
+    
+    def _get_lunar_general(self, date):
+        # 简化计算，仅供参考
+        month_idx = (date.month + 10) % 12
+        day_idx = (date.day + 18) % 30
         return f"{self.lunar_months[month_idx]}{self.lunar_days[day_idx]}"
     
     def run(self):
