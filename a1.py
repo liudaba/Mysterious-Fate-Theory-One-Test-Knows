@@ -458,25 +458,149 @@ class MysteryFortuneApp:
         current_year = datetime.now().year
         year_gz = f"{self.tiangan[(current_year-4)%10]}{self.dizhi[(current_year-4)%12]}年"
         year_wx = wuxing_map[self.tiangan[(current_year-4)%10]]
+        year_zhi = self.dizhi[(current_year-4)%12]
         
         if year_wx in xi_shen:
             year_luck = "大吉"
             luck_color = self.colors['gold']
-            year_desc = "流年为喜用神，诸事顺遍，可積极进取。"
+            year_summary = "流年为喜用神，诸事顺遍，可積极进取。"
+            year_details = [
+                "💰 财运：财运亨通，正财偏财皆有机会，可适当投资理财，但不宜贪心。",
+                "🏢 事业：工作顺利，有贵人相助，适合拓展业务或谋求晋升。",
+                "💗 感情：单身者有望遇良缘，已婚者感情和睦，家庭美满。",
+                "🎯 健康：身体状况良好，但仍需注意作息规律，勿过度劳累。"
+            ]
         elif year_wx == day_wuxing:
             year_luck = "平稳"
             luck_color = self.colors['green']
-            year_desc = "流年与日主同元，运势平稳，宜守不宜攻。"
+            year_summary = "流年与日主同元，运势平稳，宜守不宜攻。"
+            year_details = [
+                "💰 财运：收入稳定，正财为主，不宜投机冒险，稳健理财为宜。",
+                "🏢 事业：工作按部就班，不宜贸然跳槽或创业，守住本职为上。",
+                "💗 感情：感情平淡，需用心经营，多与伴侣沟通交流。",
+                "🎯 健康：注意肠胃保养，饮食宜清淡，保持适当运动。"
+            ]
         else:
             year_luck = "平常"
             luck_color = self.colors['orange']
-            year_desc = "流年与命局有冲，宜谨慎行事，避免重大决策。"
+            year_summary = "流年与命局有冲，宜谨慎行事，避免重大决策。"
+            year_details = [
+                "💰 财运：财运波动，忌贪忌投机，守住现有钱财，勿轻信他人。",
+                "🏢 事业：工作中可能遇到小人或阻碍，宜低调做事，不争风头。",
+                "💗 感情：感情易有波折，多包容理解，避免争吵。",
+                "🎯 健康：注意安全，谨防意外，定期体检，预防为主。"
+            ]
         
         tk.Label(yunshi_frame, text=f"📅 {year_gz}（{year_wx}）：{year_luck}", 
                 font=("Microsoft YaHei", 12, "bold"),
                 fg=luck_color, bg=self.colors['bg_card']).pack(anchor="w", padx=15, pady=3)
-        tk.Label(yunshi_frame, text=f"  {year_desc}", font=("Microsoft YaHei", 11),
+        tk.Label(yunshi_frame, text=f"  {year_summary}", font=("Microsoft YaHei", 11),
                 fg=self.colors['text'], bg=self.colors['bg_card']).pack(anchor="w", padx=15, pady=3)
+        
+        for detail in year_details:
+            tk.Label(yunshi_frame, text=f"  {detail}", font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_card']).pack(anchor="w", padx=15, pady=2)
+        
+        # === 一生命运概述 ===
+        life_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        life_frame.pack(fill=tk.X, padx=15, pady=8)
+        
+        tk.Label(life_frame, text="⑥ 一生命运概述", font=("Microsoft YaHei", 13, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_card']).pack(anchor="w", padx=15, pady=8)
+        
+        # 根据日主五行和强弱生成一生命运概述
+        life_readings = {
+            '木': {
+                True: [
+                    "【综合命运】日主甲木身旺，如参天大树，生命力旺盛。一生性格刚正不阿，有领导才能，适合担任管理者角色。",
+                    "【少年运势】（1-25岁）少年时期学业顺利，聪明好学，但性格较为倒强，需注意与人相处的方式方法。",
+                    "【中年运势】（26-50岁）中年事业有成，财运亨通，但木旺克土，需注意婚姻家庭的经营，避免因事业而忽视家人。",
+                    "【晚年运势】（51岁后）晚年安康，子孙孝顺，可享天伦之乐。注意肝胆保养，适当运动。"
+                ],
+                False: [
+                    "【综合命运】日主甲木身弱，如幼苗需水木滋养。一生性格温和，善于合作，适合团队工作，借助贵人之力发展。",
+                    "【少年运势】（1-25岁）少年时期可能较为艰苦，需要努力学习，多依靠父母帮助。",
+                    "【中年运势】（26-50岁）中年运势渐入佳境，遇贵人相助，事业有成。婚姻缘分来得稍晚，但质量高。",
+                    "【晚年运势】（51岁后）晚年子孙孝顺，大器晚成，可享清福。注意肝胆、筋骨保养。"
+                ]
+            },
+            '火': {
+                True: [
+                    "【综合命运】日主丙火身旺，如日中天，光明磊落，热情开朗。具有领袖气质，事业心强，年轻时即有成就。",
+                    "【少年运势】（1-25岁）少年时期活泼好动，学业表现突出，但性格急躁，需修身养性。",
+                    "【中年运势】（26-50岁）中年事业达高峰，名利双收。但火旺则燥，需水来济，宜多与水型人合作。",
+                    "【晚年运势】（51岁后）晚年子孙有出息，家庭和睦。注意心血管保养，忌暴躁。"
+                ],
+                False: [
+                    "【综合命运】日主丙火身弱，如烛火微弱，需木来生扶。性格温和，善于交际，人缘极佳。",
+                    "【少年运势】（1-25岁）少年时期需贵人提携，依靠家庭扶持，学业平稳。",
+                    "【中年运势】（26-50岁）中年运势渐佳，适合公关、销售类工作。财运平稳，不宜冒险投资。",
+                    "【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意心脏、血压保养。"
+                ]
+            },
+            '土': {
+                True: [
+                    "【综合命运】日主戊土身旺，如山岳稳重，诚实守信，有担当。但过于固执，需注意灵活变通。",
+                    "【少年运势】（1-25岁）少年时期性格踏实，学业稳定，但不够灵活，需多拓展视野。",
+                    "【中年运势】（26-50岁）中年事业稳定，适合政府、国企、教育等行业。财运稳健，積蓄渐丰。",
+                    "【晚年运势】（51岁后）晚年安稳，子孙孝顺，家业兴旺。注意脾胃保养。"
+                ],
+                False: [
+                    "【综合命运】日主戊土身弱，如田园乏水，需火土生扶。性格随和，包容性强，人缘好。",
+                    "【少年运势】（1-25岁）少年时期需依靠家庭，学业较为平常，但能吃苦耐劳。",
+                    "【中年运势】（26-50岁）中年后运势渐入佳境，大器晚成。适合稳定的工作环境。",
+                    "【晚年运势】（51岁后）晚年福泻深厚，子孙满堂，家庄和睦。注意肠胃保养。"
+                ]
+            },
+            '金': {
+                True: [
+                    "【综合命运】日主庚金身旺，如刃剑出鞘，果断刚毅。适合武职、法律、金融等行业。",
+                    "【少年运势】（1-25岁）少年时期性格要强，学业表现突出，但需注意人际关系。",
+                    "【中年运势】（26-50岁）中年事业有成，正财运佳。但金旺克木太过，宜注意家庭和谐。",
+                    "【晚年运势】（51岁后）晚年安康，子孙孝顺。注意肺部、呼吸系统保养。"
+                ],
+                False: [
+                    "【综合命运】日主庚金身弱，如饰品小巧，需土金生扶。心思细密，善于策划，适合幕后工作。",
+                    "【少年运势】（1-25岁）少年时期需依靠家庭扶持，学业平稳，善于思考。",
+                    "【中年运势】（26-50岁）中年运势渐佳，适合技术、管理岗位。财运需耐心经营，稳中求进。",
+                    "【晚年运势】（51岁后）晚年子孙缘深，家庭和睦。注意肺部、皮肤保养。"
+                ]
+            },
+            '水': {
+                True: [
+                    "【综合命运】日主壬水身旺，如江河汹涌，智慧过人，变通能力强。适合研究、写作、咨询等智力工作。",
+                    "【少年运势】（1-25岁）少年时期聪明过人，学业优异，但思绪不定，需专注。",
+                    "【中年运势】（26-50岁）中年事业有成，有海外发展运。但水旺则泛，需土来制，宜与土型人合作。",
+                    "【晚年运势】（51岁后）晚年智慧不减，可发挥余热。注意肾脏、泰尿系统保养。"
+                ],
+                False: [
+                    "【综合命运】日主壬水身弱，如源头细流，需金水生扶。性格温顺，适应力强，人缘好。",
+                    "【少年运势】（1-25岁）少年时期需家庭扶持，学业平稳，但善于适应环境。",
+                    "【中年运势】（26-50岁）中年运势渐佳，需贵人提携，合作经营为佳。婚姻和美。",
+                    "【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意肾脏、注意保暖。"
+                ]
+            }
+        }
+        
+        my_life_readings = life_readings.get(day_wuxing, life_readings['木'])[is_strong]
+        
+        # 显示基础信息
+        base_info = f"您的日主为{day_gan}（属{day_wuxing}），{'\u8eab\u65fa' if is_strong else '\u8eab\u5f31'}，喜用神为{'\u3001'.join(xi_shen[:2])}，忌神为{'\u3001'.join(ji_shen[:2])}。"
+        tk.Label(life_frame, text=base_info, font=("Microsoft YaHei", 10),
+                fg=self.colors['purple_light'], bg=self.colors['bg_card'],
+                wraplength=680).pack(anchor="w", padx=15, pady=5)
+        
+        # 显示一生命运概述
+        for reading in my_life_readings:
+            tk.Label(life_frame, text=reading, font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_card'],
+                    wraplength=680, justify=tk.LEFT).pack(anchor="w", padx=15, pady=4)
+        
+        # 命理依据说明
+        tk.Label(life_frame, text="📚 命理依据：本分析基于《渊海子平》《三命通会》《子平真诠》等古典命理典籍，结合日主五行旺衰、喜忌神等因素综合分析。", 
+                font=("Microsoft YaHei", 9),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'],
+                wraplength=680).pack(anchor="w", padx=15, pady=(8, 5))
         
         # 结束语
         tk.Label(scroll_frame, text="✨ 命由天定，运由己造，以上仅供参考 ✨", 
@@ -569,76 +693,145 @@ class MysteryFortuneApp:
         
         today = datetime.now()
         
+        # 宜忌详细解说字典
+        yi_explanations = {
+            "嫁娶": "【嫁娶】今日适合举办婚礼、订婚、提亲等喜事。选择此日成婚，夫妻和睦，白头偕老，子孙满堂。婚姻大事，需择良辰吉日，方能福泽绵长。",
+            "祭祀": "【祭祀】今日适合祭拜神明、祖先、上香进贡。可前往寺庙烧香祈福，或在家中祭祀先人。诚心祭拜，可保家宅平安，事业顺遂。",
+            "出行": "【出行】今日适合外出、旅游、出差、探亲访友。路途平安顺利，诸事顺心。无论是短途还是远行，都能一路平安，高高兴兴出门，平平安安回家。",
+            "开市": "【开市】今日适合店铺开业、公司开张、新项目启动。选此日开业，财源广进，客似云来，生意兴隆。新店开张或公司成立，均为上上大吉之日。",
+            "纳财": "【纳财】今日适合收取钱财、结算账款、收取租金。财运亨通，进财顺利，适合处理财务事宜。无论是收款还是理财，都能顺风顺水。",
+            "动土": "【动土】今日适合建房动工、地基开挖、园林施工。动土大吉，工程顺利，地基稳固。此日动工，可保建筑稳固，家宅兴旺。",
+            "安床": "【安床】今日适合安置床铺、调整床位。床位安定，睡眠安稳，家庭和睦。新婚安床或调整卧室布局，皆为吉日。",
+            "入宅": "【入宅】今日适合搬家入住、乔迁新居。入住新居后家运亨通，万事如意。新家入住，品质生活从此开始，幸福美满源源不断。",
+            "开光": "【开光】今日适合佛像开光、神位开光、吉祥物品开光。开光后的物品灵气十足，可保佑平安、招财进宝。",
+            "修造": "【修造】今日适合房屋修缮、装修改造。工程顺利，质量保证，修缮后的房屋稳固耐用。无论是小修小补还是大工程，都能顺利完工。"
+        }
+        
+        ji_explanations = {
+            "诉讼": "【诉讼】今日不宜打官司、起诉、争讼。若有纠纷，宜和解为上，否则官司缠身，耗财伤神。退一步海阔天空，忍一时风平浪静。",
+            "安葬": "【安葬】今日不宜下葬、安放遗骸。宜另择吉日，以免影响子孙运势。丧葬大事，须慎重择日，方能保家宅安宁。",
+            "破土": "【破土】今日不宜挖掘土地、墓地动工。恐惊动土神，带来不利。若有土木工程，宜择他日方能平安顺利。",
+            "伐木": "【伐木】今日不宜砂伐树木、采伐林木。树木有灵，随意砍伐恐伤元气。若确需破坏树木，应另择吉日进行。",
+            "作灶": "【作灶】今日不宜安装火灶、灶台。灶为家中财库，安装不当影响财运。若要安装厨房设备，应另择吉日，方能财源广进。",
+            "掘井": "【掘井】今日不宜挖掘水井、打水井。井为生命之源，择日不当恐影响家人健康。若需挖井，应另择吉日方能水源不断。",
+            "栽种": "【栽种】今日不宜种植花草树木。植物难以成活，或生长不旺。若要绿化美化环境，应另择吉日，方能花木繁茂。"
+        }
+        
+        # 创建可滚动区域
+        canvas = tk.Canvas(self.content_frame, bg=self.colors['bg_dark'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_dark'])
+        
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=750)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=5)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
         # 今日信息卡
-        info_card = tk.Frame(self.content_frame, bg=self.colors['bg_hover'])
-        info_card.pack(fill=tk.X, padx=20, pady=15)
+        info_card = tk.Frame(scroll_frame, bg=self.colors['bg_hover'])
+        info_card.pack(fill=tk.X, padx=10, pady=10)
         
         # 日期大字
         date_frame = tk.Frame(info_card, bg=self.colors['bg_hover'])
-        date_frame.pack(fill=tk.X, padx=20, pady=15)
+        date_frame.pack(fill=tk.X, padx=15, pady=10)
         
-        tk.Label(date_frame, text=str(today.day), font=("Arial", 72, "bold"),
+        tk.Label(date_frame, text=str(today.day), font=("Arial", 60, "bold"),
                 fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(side=tk.LEFT)
         
         right_info = tk.Frame(date_frame, bg=self.colors['bg_hover'])
-        right_info.pack(side=tk.LEFT, padx=20)
+        right_info.pack(side=tk.LEFT, padx=15)
         
-        tk.Label(right_info, text=today.strftime("%Y年%m月"), font=("Microsoft YaHei", 16),
+        tk.Label(right_info, text=today.strftime("%Y年%m月"), font=("Microsoft YaHei", 14),
                 fg=self.colors['text'], bg=self.colors['bg_hover']).pack(anchor="w")
         
         weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日']
-        tk.Label(right_info, text=weekdays[today.weekday()], font=("Microsoft YaHei", 14),
+        tk.Label(right_info, text=weekdays[today.weekday()], font=("Microsoft YaHei", 12),
                 fg=self.colors['text_dim'], bg=self.colors['bg_hover']).pack(anchor="w")
         
         lunar = self.get_lunar_date(today)
-        tk.Label(right_info, text=f"农历 {lunar}", font=("Microsoft YaHei", 13),
+        tk.Label(right_info, text=f"农历 {lunar}", font=("Microsoft YaHei", 12),
                 fg=self.colors['purple_light'], bg=self.colors['bg_hover']).pack(anchor="w")
         
-        # 干支纪年
         year_gz = f"{self.tiangan[(today.year-4)%10]}{self.dizhi[(today.year-4)%12]}年"
         shengxiao = self.shengxiao[(today.year-4)%12]
-        tk.Label(right_info, text=f"{year_gz} 【{shengxiao}年】", font=("Microsoft YaHei", 12),
+        tk.Label(right_info, text=f"{year_gz} 【{shengxiao}年】", font=("Microsoft YaHei", 11),
                 fg=self.colors['gold_dark'], bg=self.colors['bg_hover']).pack(anchor="w")
         
         # 宜忌信息
-        yiji_frame = tk.Frame(self.content_frame, bg=self.colors['bg_card'])
-        yiji_frame.pack(fill=tk.X, padx=20, pady=10)
+        yiji_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        yiji_frame.pack(fill=tk.X, padx=10, pady=8)
         
-        yi_list = random.sample(["嫁娶", "祭祀", "出行", "开市", "纳财", "动土", "安床", "入宅", "开光", "修造"], 5)
-        ji_list = random.sample(["诉讼", "安葬", "破土", "伐木", "作灶", "掘井", "栽种"], 4)
+        yi_list = random.sample(list(yi_explanations.keys()), 5)
+        ji_list = random.sample(list(ji_explanations.keys()), 4)
         
         # 宜
         yi_frame = tk.Frame(yiji_frame, bg=self.colors['bg_card'])
-        yi_frame.pack(fill=tk.X, pady=10)
+        yi_frame.pack(fill=tk.X, pady=8)
         
-        tk.Label(yi_frame, text="  宜  ", font=("Microsoft YaHei", 14, "bold"),
-                fg="white", bg=self.colors['green']).pack(side=tk.LEFT, padx=15)
-        tk.Label(yi_frame, text="  ".join(yi_list), font=("Microsoft YaHei", 12),
-                fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
+        tk.Label(yi_frame, text="  宜  ", font=("Microsoft YaHei", 13, "bold"),
+                fg="white", bg=self.colors['green']).pack(side=tk.LEFT, padx=12)
+        tk.Label(yi_frame, text="  ".join(yi_list), font=("Microsoft YaHei", 11),
+                fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=8)
         
         # 忌
         ji_frame = tk.Frame(yiji_frame, bg=self.colors['bg_card'])
-        ji_frame.pack(fill=tk.X, pady=10)
+        ji_frame.pack(fill=tk.X, pady=8)
         
-        tk.Label(ji_frame, text="  忌  ", font=("Microsoft YaHei", 14, "bold"),
-                fg="white", bg=self.colors['red']).pack(side=tk.LEFT, padx=15)
-        tk.Label(ji_frame, text="  ".join(ji_list), font=("Microsoft YaHei", 12),
-                fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
+        tk.Label(ji_frame, text="  忌  ", font=("Microsoft YaHei", 13, "bold"),
+                fg="white", bg=self.colors['red']).pack(side=tk.LEFT, padx=12)
+        tk.Label(ji_frame, text="  ".join(ji_list), font=("Microsoft YaHei", 11),
+                fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=8)
         
         # 其他信息
-        extra_frame = tk.Frame(self.content_frame, bg=self.colors['bg_hover'])
-        extra_frame.pack(fill=tk.X, padx=20, pady=10)
+        extra_frame = tk.Frame(scroll_frame, bg=self.colors['bg_hover'])
+        extra_frame.pack(fill=tk.X, padx=10, pady=8)
         
         extras = [
             ("冲煞", f"冲{random.choice(self.shengxiao)} 煞{random.choice(['东','西','南','北'])}"),
             ("吉神", random.choice(["天德", "月德", "天恩", "福星", "天喜"])),
             ("凶神", random.choice(["五鬼", "死气", "白虎", "天刑", "朱雀"])),
-            ("胎神", random.choice(["仓库门外正南", "厨灶碓外东南", "房床栖外正西"])),
         ]
         
         for label, value in extras:
-            tk.Label(extra_frame, text=f"{label}：{value}", font=("Microsoft YaHei", 11),
-                    fg=self.colors['text'], bg=self.colors['bg_hover']).pack(side=tk.LEFT, padx=20, pady=15)
+            tk.Label(extra_frame, text=f"{label}：{value}", font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_hover']).pack(side=tk.LEFT, padx=15, pady=10)
+        
+        # === 宜事详解 ===
+        tk.Label(scroll_frame, text="✅ 今日宜事详解", font=("Microsoft YaHei", 13, "bold"),
+                fg=self.colors['green'], bg=self.colors['bg_dark']).pack(anchor="w", padx=15, pady=(15, 8))
+        
+        for yi_item in yi_list:
+            yi_detail_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+            yi_detail_frame.pack(fill=tk.X, padx=10, pady=3)
+            
+            explanation = yi_explanations.get(yi_item, f"【{yi_item}】今日适合进行此事，万事顺利，吉祥如意。")
+            tk.Label(yi_detail_frame, text=explanation, font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_card'],
+                    wraplength=680, justify=tk.LEFT, anchor="w").pack(fill=tk.X, padx=12, pady=8)
+        
+        # === 忌事详解 ===
+        tk.Label(scroll_frame, text="❌ 今日忌事详解", font=("Microsoft YaHei", 13, "bold"),
+                fg=self.colors['red'], bg=self.colors['bg_dark']).pack(anchor="w", padx=15, pady=(15, 8))
+        
+        for ji_item in ji_list:
+            ji_detail_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+            ji_detail_frame.pack(fill=tk.X, padx=10, pady=3)
+            
+            explanation = ji_explanations.get(ji_item, f"【{ji_item}】今日不宜进行此事，应另择吉日，以免不利。")
+            tk.Label(ji_detail_frame, text=explanation, font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_card'],
+                    wraplength=680, justify=tk.LEFT, anchor="w").pack(fill=tk.X, padx=12, pady=8)
+        
+        # 底部结束语
+        tk.Label(scroll_frame, text="✨ 顺应天时，趋吉避凶，平安顺遂 ✨", 
+                font=("Microsoft YaHei", 11, "bold"),
+                fg=self.colors['gold'], bg=self.colors['bg_dark']).pack(pady=15)
     
     def show_marriage_match(self):
         self.clear_content()
