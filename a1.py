@@ -6,7 +6,6 @@
     - 黄道吉日：择日择时、事项吉日查询
     - 老黄历：每日宜忌、农历信息
     - 婚姻配对：生肖配对、契合度分析
-    - 今日禁忌：冲煞信息、化解建议
 
 Author: Mystery Fortune Team
 """
@@ -243,7 +242,6 @@ class MysteryFortuneApp:
             ("📅", "黄道吉日", self.show_auspicious_days),
             ("📜", "老 黄 历", self.show_almanac),
             ("💑", "婚姻配对", self.show_marriage_match),
-            ("⚠", "今日禁忌", self.show_taboos),
         ]
         
         self.nav_buttons = []
@@ -319,7 +317,6 @@ class MysteryFortuneApp:
             ("📅", "黄道吉日", "择日择时、婚嫁吉日\n开业搬家、出行良辰", self.colors['green']),
             ("📜", "老 黄 历", "每日宜忌、农历信息\n节气物候、传统文化", self.colors['gold_dark']),
             ("💑", "婚姻配对", "生肖配对、八字合婚\n姻缘分析、幸福指数", self.colors['red']),
-            ("⚠", "今日禁忌", "每日冲煞、忌讳事项\n趋吉避凶、平安顺遂", "#e67e22"),
         ]
         
         for i, (icon, title, desc, color) in enumerate(features):
@@ -1103,87 +1100,6 @@ class MysteryFortuneApp:
         tk.Label(scroll_frame, text="✨ 愿有情人终成眷属 ✨", 
                 font=("Microsoft YaHei", 11, "bold"),
                 fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=15)
-    
-    def show_taboos(self):
-        self.clear_content()
-        self.create_panel_title("⚠", "今日禁忌", "趋吉避凶，平安顺遂")
-        
-        today = datetime.now()
-        
-        # 创建可滚动区域 - 使用通用方法
-        canvas, scroll_frame = self._create_scrollable_frame(self.content_frame, width=750)
-        
-        # 冲煞信息
-        chong_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
-        chong_frame.pack(fill=tk.X, padx=10, pady=10)
-        
-        # 使用统一的每日冲煎计算
-        daily_info = self.get_daily_chongsha(today)
-        chong_shengxiao = daily_info['chong_sx']
-        sha_direction = daily_info['sha_dir']
-        
-        chong_info = tk.Frame(chong_frame, bg=self.colors['bg_card'])
-        chong_info.pack(fill=tk.X, padx=15, pady=10)
-        
-        tk.Label(chong_info, text=f"⚡ 今日冲 {chong_shengxiao}", font=("Microsoft YaHei", 16, "bold"),
-                fg=self.colors['red'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
-        tk.Label(chong_info, text=f"🧭 煞 {sha_direction}", font=("Microsoft YaHei", 16, "bold"),
-                fg="#e67e22", bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=20)
-        
-        tk.Label(chong_frame, text=f"属{chong_shengxiao}者今日宜静不宜动，避免往{sha_direction}方向", 
-                font=("Microsoft YaHei", 11),
-                fg=self.colors['text_dim'], bg=self.colors['bg_card']).pack(anchor="w", padx=25, pady=(0, 10))
-        
-        # 禁忌事项标题
-        tk.Label(scroll_frame, text="🚫 今日禁忌事项", font=("Microsoft YaHei", 14, "bold"),
-                fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(anchor="w", padx=15, pady=(15, 10))
-        
-        taboos = [
-            ("❌ 忌嫁娶", "今日不宜举办婚嫁之事，恐有不顺"),
-            ("❌ 忌安葬", "不宜办理丧葬事宜，择日再行"),
-            ("❌ 忌动土", "不宜破土动工，恐惊动土神"),
-            ("❌ 忌开市", "不宜开张营业，财运不济"),
-            ("❌ 忌远行", "不宜出远门，途中多有阻碍"),
-        ]
-        
-        # 基于日期确定性选择禁忌
-        selected_taboos = self._deterministic_slice(taboos, 4, self._get_date_seed(today) + 2000)
-        
-        for title, desc in selected_taboos:
-            item_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
-            item_frame.pack(fill=tk.X, padx=10, pady=4)
-            
-            tk.Label(item_frame, text=title, font=("Microsoft YaHei", 12, "bold"),
-                    fg=self.colors['red'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=15, pady=8)
-            tk.Label(item_frame, text=desc, font=("Microsoft YaHei", 11),
-                    fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
-        
-        # 化解建议标题
-        tk.Label(scroll_frame, text="💡 化解建议", font=("Microsoft YaHei", 14, "bold"),
-                fg=self.colors['green'], bg=self.colors['bg_hover']).pack(anchor="w", padx=15, pady=(20, 10))
-        
-        # 化解建议内容卡片
-        tips_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
-        tips_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        tips = [
-            "📿 佩戴本命佛或护身符可化解部分不利",
-            "🙏 心存善念，多行善事可积福消灾",
-            "❤️ 避免与人争执，和气生财",
-            "📅 重要决定可择吉日再行",
-            "🎴 家中可摆放平安符或福字辟邪",
-            "🌿 多亲近自然，调节身心状态",
-        ]
-        
-        for tip in tips:
-            tk.Label(tips_frame, text=tip, font=("Microsoft YaHei", 11),
-                    fg=self.colors['text'], bg=self.colors['bg_card'],
-                    anchor="w").pack(fill=tk.X, padx=20, pady=6)
-        
-        # 底部结束语
-        tk.Label(scroll_frame, text="✨ 愿您今日平安顺遂，万事如意 ✨", 
-                font=("Microsoft YaHei", 12, "bold"),
-                fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=20)
     
     def get_lunar_date(self, date):
         # 2025年农历基准：2025年1月29日 = 农历乙巳年正月初一

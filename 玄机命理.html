@@ -263,20 +263,6 @@
         }
         .progress-value { font-size: 0.85rem; color: var(--gold); width: 40px; }
         
-        /* 禁忌项 */
-        .taboo-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px;
-            background: var(--bg-hover);
-            border-radius: 8px;
-            margin: 8px 0;
-        }
-        .taboo-icon { font-size: 1.2rem; }
-        .taboo-content .title { font-weight: bold; color: var(--red); font-size: 0.9rem; }
-        .taboo-content .desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 3px; }
-        
         /* 老黄历大日期 */
         .almanac-date {
             display: flex;
@@ -347,11 +333,6 @@
                         <div class="title">婚姻配对</div>
                         <div class="desc">生肖姻缘测算</div>
                     </div>
-                    <div class="feature-card" onclick="showPage('taboo')" style="grid-column: span 2;">
-                        <div class="icon">⚠️</div>
-                        <div class="title">今日禁忌</div>
-                        <div class="desc">趋吉避凶 · 平安顺遂</div>
-                    </div>
                 </div>
             </div>
             
@@ -412,11 +393,6 @@
                 </div>
                 <div id="matchResult"></div>
             </div>
-            
-            <!-- 今日禁忌 -->
-            <div id="page-taboo" class="page">
-                <div id="tabooContent"></div>
-            </div>
         </main>
         
         <!-- 底部导航 -->
@@ -440,10 +416,6 @@
             <div class="nav-item" onclick="showPage('marriage')">
                 <span class="icon">💑</span>
                 <span>配对</span>
-            </div>
-            <div class="nav-item" onclick="showPage('taboo')">
-                <span class="icon">⚠️</span>
-                <span>禁忌</span>
             </div>
         </nav>
     </div>
@@ -504,7 +476,6 @@ function cacheDOM() {
     DOM.auspiciousResult = document.getElementById('auspiciousResult');
     DOM.almanacContent = document.getElementById('almanacContent');
     DOM.matchResult = document.getElementById('matchResult');
-    DOM.tabooContent = document.getElementById('tabooContent');
     DOM.pages = document.querySelectorAll('.page');
     DOM.navItems = document.querySelectorAll('.nav-item');
 }
@@ -719,7 +690,7 @@ const LunarCalendar = {
 function getLunarDate(date) { return LunarCalendar.getDate(date); }
 
 // ============ 页面导航模块 ============
-const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4, taboo:5});
+const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4});
 
 function showPage(page) {
     // 使用缓存的DOM元素
@@ -736,7 +707,6 @@ function showPage(page) {
     // 页面加载回调
     const pageCallbacks = {
         almanac: showAlmanac,
-        taboo: showTaboo,
         auspicious: searchAuspicious
     };
     pageCallbacks[page]?.();
@@ -1297,66 +1267,6 @@ function calculateMatch() {
                 </div>
             `).join('')}
         </div>
-    `;
-}
-
-// ============ 今日禁忌 ============
-function showTaboo() {
-    // 使用统一的每日信息
-    const daily = DailyInfo.get();
-    const chongSx = daily.chongSx;
-    const shaDir = daily.shaDir;
-    const now = new Date();
-    const dateSeed = Utils.getDateSeed(now);
-    
-    // 基于日期确定性选择禁忌
-    const allTaboos = [
-        ['忌嫁娶', '今日不宜举办婚嫁之事，恐有不顺'],
-        ['忌安葬', '不宜办理丧葬事宜，择日再行'],
-        ['忌动土', '不宜破土动工，恐惊动土神'],
-        ['忌开市', '不宜开张营业，财运不济'],
-        ['忌远行', '不宜出远门，途中多有阻碍']
-    ];
-    const taboos = Utils.deterministicSlice(allTaboos, 4, dateSeed + 2000);
-    
-    const tips = [
-        '📿 佩戴本命佛或护身符可化解部分不利',
-        '🙏 心存善念，多行善事可积福消灾',
-        '❤️ 避免与人争执，和气生财',
-        '📅 重要决定可择吉日再行'
-    ];
-    
-    DOM.tabooContent.innerHTML = `
-        <div class="card">
-            <div class="card-title">⚡ 今日冲煞</div>
-            <div style="display:flex; gap:20px; font-size:1.1rem; font-weight:bold;">
-                <span style="color:var(--red);">冲 ${chongSx}</span>
-                <span style="color:var(--orange);">煞 ${shaDir}</span>
-            </div>
-            <div style="font-size:0.85rem; color:var(--text-dim); margin-top:8px;">
-                属${chongSx}者今日宜静不宜动，避免往${shaDir}方向
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-title">🚫 今日禁忌事项</div>
-            ${taboos.map(([title, desc]) => `
-                <div class="taboo-item">
-                    <span class="taboo-icon">❌</span>
-                    <div class="taboo-content">
-                        <div class="title">${title}</div>
-                        <div class="desc">${desc}</div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-        
-        <div class="card">
-            <div class="card-title">💡 化解建议</div>
-            ${tips.map(t => `<div style="padding:8px 0; font-size:0.9rem;">${t}</div>`).join('')}
-        </div>
-        
-        <div class="hint-text">✨ 愿您今日平安顺遂，万事如意 ✨</div>
     `;
 }
 
