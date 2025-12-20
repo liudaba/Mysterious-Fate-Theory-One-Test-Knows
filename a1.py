@@ -57,7 +57,63 @@ class MysteryFortuneApp:
                           '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']
         
         self.current_panel = None
+        self.nav_buttons = []
         self.setup_ui()
+    
+    def _create_scrollable_frame(self, parent, width=720, bg_color=None):
+        """Create a reusable scrollable frame
+        
+        Args:
+            parent: Parent widget
+            width: Canvas width
+            bg_color: Background color (defaults to bg_hover)
+            
+        Returns:
+            Tuple of (canvas, scroll_frame)
+        """
+        bg = bg_color or self.colors['bg_hover']
+        canvas = tk.Canvas(parent, bg=bg, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg=bg)
+        
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=width)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Mouse wheel support
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
+        return canvas, scroll_frame
+    
+    def _validate_date_input(self) -> tuple:
+        """验证日期输入
+        
+        Returns:
+            (is_valid, year, month, day, hour, error_msg)
+        """
+        try:
+            year = int(self.year_var.get())
+            month = int(self.month_var.get())
+            day = int(self.day_var.get())
+            hour = int(self.hour_var.get())
+            
+            if not (1940 <= year <= 2025):
+                return False, 0, 0, 0, 0, "年份范围应在1940-2025之间"
+            if not (1 <= month <= 12):
+                return False, 0, 0, 0, 0, "月份范围应在1-12之间"
+            if not (1 <= day <= 31):
+                return False, 0, 0, 0, 0, "日期范围应在1-31之间"
+            if not (0 <= hour <= 23):
+                return False, 0, 0, 0, 0, "时辰范围应在0-23之间"
+                
+            return True, year, month, day, hour, None
+        except ValueError:
+            return False, 0, 0, 0, 0, "请输入有效的数字"
         
     def setup_ui(self):
         # 顶部标题栏
@@ -243,13 +299,17 @@ class MysteryFortuneApp:
         self.fortune_result.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
     def calculate_fortune(self):
+        """Calculate and display fortune analysis"""
         for widget in self.fortune_result.winfo_children():
             widget.destroy()
-            
-        year = int(self.year_var.get())
-        month = int(self.month_var.get())
-        day = int(self.day_var.get())
-        hour = int(self.hour_var.get())
+        
+        # 验证输入
+        is_valid, year, month, day, hour, error_msg = self._validate_date_input()
+        if not is_valid:
+            tk.Label(self.fortune_result, text=f"❌ {error_msg}", 
+                    font=("Microsoft YaHei", 14),
+                    fg=self.colors['red'], bg=self.colors['bg_hover']).pack(pady=50)
+            return
         
         # 计算八字
         year_gan = self.tiangan[(year - 4) % 10]
@@ -317,21 +377,8 @@ class MysteryFortuneApp:
                     "正官格", "七杀格", "建禄格", "羊刃格"]
         geju = random.choice(geju_list)
         
-        # 创建可滚动区域
-        canvas = tk.Canvas(self.fortune_result, bg=self.colors['bg_hover'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.fortune_result, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_hover'])
-        
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=720)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        # 创建可滚动区域 - 使用通用方法
+        canvas, scroll_frame = self._create_scrollable_frame(self.fortune_result, width=720)
         
         # 标题
         tk.Label(scroll_frame, text="📿 命理分析报告", 
@@ -656,17 +703,8 @@ class MysteryFortuneApp:
                 font=("Microsoft YaHei", 14, "bold"),
                 fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=10)
         
-        # 创建可滚动区域
-        canvas = tk.Canvas(self.auspicious_result, bg=self.colors['bg_hover'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.auspicious_result, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_hover'])
-        
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # 创建可滚动区域 - 使用通用方法
+        canvas, scroll_frame = self._create_scrollable_frame(self.auspicious_result)
         
         # 生成12个吉日（三个月内）
         for i in range(12):
@@ -692,11 +730,6 @@ class MysteryFortuneApp:
                     fg=self.colors['purple_light'], bg=self.colors['bg_card']).pack(side=tk.LEFT)
             tk.Label(day_frame, text=luck_level, font=("Microsoft YaHei", 10, "bold"),
                     fg=luck_color, bg=self.colors['bg_card']).pack(side=tk.RIGHT, padx=15)
-        
-        # 鼠标滚轮支持
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
     
     def show_almanac(self):
         self.clear_content()
@@ -728,21 +761,10 @@ class MysteryFortuneApp:
             "栽种": "【栽种】今日不宜种植花草树木。植物难以成活，或生长不旺。若要绿化美化环境，应另择吉日，方能花木繁茂。"
         }
         
-        # 创建可滚动区域
-        canvas = tk.Canvas(self.content_frame, bg=self.colors['bg_dark'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_dark'])
-        
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=750)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=5)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        # 创建可滚动区域 - 使用通用方法
+        canvas, scroll_frame = self._create_scrollable_frame(
+            self.content_frame, width=750, bg_color=self.colors['bg_dark']
+        )
         
         # 今日信息卡
         info_card = tk.Frame(scroll_frame, bg=self.colors['bg_hover'])
@@ -907,21 +929,8 @@ class MysteryFortuneApp:
             color = "#e67e22"
             desc = "二人性格有所冲突，需要更多沟通与理解，建议婚前多加考虑。"
         
-        # 创建可滚动区域
-        canvas = tk.Canvas(self.match_result, bg=self.colors['bg_hover'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.match_result, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_hover'])
-        
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=720)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        # 创建可滚动区域 - 使用通用方法
+        canvas, scroll_frame = self._create_scrollable_frame(self.match_result, width=720)
         
         # 显示结果
         tk.Label(scroll_frame, text=f"💑 {male} ❤ {female}", 
@@ -980,22 +989,8 @@ class MysteryFortuneApp:
         
         today = datetime.now()
         
-        # 创建可滚动区域
-        canvas = tk.Canvas(self.content_frame, bg=self.colors['bg_hover'], highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg=self.colors['bg_hover'])
-        
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw", width=750)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=20, pady=10)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # 鼠标滚轮支持
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        # 创建可滚动区域 - 使用通用方法
+        canvas, scroll_frame = self._create_scrollable_frame(self.content_frame, width=750)
         
         # 冲煞信息
         chong_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
