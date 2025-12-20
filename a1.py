@@ -13,7 +13,7 @@ Author: Mystery Fortune Team
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-import random
+import math
 from datetime import datetime, timedelta
 import calendar
 from typing import Dict, List, Tuple, Optional, Callable, Any
@@ -58,7 +58,90 @@ class MysteryFortuneApp:
         
         self.current_panel = None
         self.nav_buttons = []
+        
+        # 地支六冲关系：子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲
+        self.chong_map = [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5]
+        # 煎方规则：申子辰日煎南、亥卯未日煎西、寅午戌日煎北、巳酉丑日煎东
+        self.sha_map = {0:'南', 4:'南', 8:'南', 3:'西', 7:'西', 11:'西', 2:'北', 6:'北', 10:'北', 1:'东', 5:'东', 9:'东'}
+        
+        self._daily_cache = None
+        self._daily_cache_date = None
+        
+        # 生肖配对表（基于传统命理学）
+        self.zodiac_match = {
+            'sanhe': [[0,4,8], [3,7,11], [2,6,10], [1,5,9]],  # 三合局
+            'liuhe': [[0,1], [2,11], [3,10], [4,9], [5,8], [6,7]],  # 六合
+            'liuchong': [[0,6], [1,7], [2,8], [3,9], [4,10], [5,11]],  # 六冲
+            'liuhai': [[0,7], [1,6], [2,5], [3,4], [8,11], [9,10]]  # 六害
+        }
+        
         self.setup_ui()
+    
+    # ============ 确定性算法工具函数 ============
+    def _seeded_random(self, seed: int) -> float:
+        """基于种子的确定性随机数生成"""
+        x = math.sin(seed) * 10000
+        return x - math.floor(x)
+    
+    def _deterministic_int(self, seed: int, min_val: int, max_val: int) -> int:
+        """确定性整数（基于种子）"""
+        return min_val + int(self._seeded_random(seed) * (max_val - min_val + 1))
+    
+    def _deterministic_slice(self, arr: List, n: int, seed: int) -> List:
+        """确定性打乱数组并取前n个"""
+        indexed = [(item, self._seeded_random(seed + i)) for i, item in enumerate(arr)]
+        indexed.sort(key=lambda x: x[1])
+        return [x[0] for x in indexed[:n]]
+    
+    def _get_date_seed(self, date: datetime) -> int:
+        """获取日期种子"""
+        return date.year * 10000 + date.month * 100 + date.day
+    
+    def _get_geju(self, day_gan: str, day_zhi: str) -> str:
+        """基于日柱确定性计算格局"""
+        geju_list = ["正印格", "偏印格", "食神格", "伤官格", "正财格", "偏财格", 
+                    "正官格", "七杀格"]
+        seed = self.tiangan.index(day_gan) * 12 + self.dizhi.index(day_zhi)
+        return geju_list[seed % len(geju_list)]
+    
+    def _get_zodiac_score(self, male: str, female: str) -> int:
+        """基于生肖配对表确定性计算分数"""
+        m_idx = self.shengxiao.index(male)
+        f_idx = self.shengxiao.index(female)
+        
+        # 检查三合（+25分）
+        sanhe_bonus = 0
+        for group in self.zodiac_match['sanhe']:
+            if m_idx in group and f_idx in group:
+                sanhe_bonus = 25
+                break
+        
+        # 检查六合（+20分）
+        liuhe_bonus = 0
+        for pair in self.zodiac_match['liuhe']:
+            if (pair[0] == m_idx and pair[1] == f_idx) or (pair[0] == f_idx and pair[1] == m_idx):
+                liuhe_bonus = 20
+                break
+        
+        # 检查六冲（-20分）
+        liuchong_penalty = 0
+        for pair in self.zodiac_match['liuchong']:
+            if (pair[0] == m_idx and pair[1] == f_idx) or (pair[0] == f_idx and pair[1] == m_idx):
+                liuchong_penalty = -20
+                break
+        
+        # 检查六害（-10分）
+        liuhai_penalty = 0
+        for pair in self.zodiac_match['liuhai']:
+            if (pair[0] == m_idx and pair[1] == f_idx) or (pair[0] == f_idx and pair[1] == m_idx):
+                liuhai_penalty = -10
+                break
+        
+        # 基础分70分
+        base_score = 70
+        total_score = min(99, max(60, base_score + sanhe_bonus + liuhe_bonus + liuchong_penalty + liuhai_penalty))
+        
+        return total_score
     
     def _create_scrollable_frame(self, parent, width=720, bg_color=None):
         """Create a reusable scrollable frame
@@ -372,10 +455,8 @@ class MysteryFortuneApp:
             ('被克','同'): '七杀', ('被克','异'): '正官'
         }
         
-        # 格局判断
-        geju_list = ["正印格", "偏印格", "食神格", "伤官格", "正财格", "偏财格", 
-                    "正官格", "七杀格", "建禄格", "羊刃格"]
-        geju = random.choice(geju_list)
+        # 格局判断（基于日柱确定性计算）
+        geju = self._get_geju(day_gan, day_zhi)
         
         # 创建可滚动区域 - 使用通用方法
         canvas, scroll_frame = self._create_scrollable_frame(self.fortune_result, width=720)
@@ -698,6 +779,11 @@ class MysteryFortuneApp:
             
         event = self.event_var.get()
         today = datetime.now()
+        base_seed = self._get_date_seed(today)
+        
+        # 事项类型索引（用于确定性计算）
+        event_types = ["结婚嫁娶", "搬家入宅", "开业开张", "出行远行", "签约交易", "动土建房"]
+        event_idx = event_types.index(event) if event in event_types else 0
         
         tk.Label(self.auspicious_result, text=f"📅 近三个月「{event}」吉日", 
                 font=("Microsoft YaHei", 14, "bold"),
@@ -708,9 +794,11 @@ class MysteryFortuneApp:
         
         # 生成12个吉日（三个月内）
         for i in range(12):
-            days_add = random.randint(3 + i*7, 10 + i*7)  # 范围扩展到90天
+            # 基于日期、事项和序号确定性计算天数
+            seed = base_seed + event_idx * 100 + i * 7
+            days_add = 3 + i * 7 + self._deterministic_int(seed, 0, 4)
             if days_add > 90:
-                days_add = random.randint(80, 90)
+                days_add = 80 + self._deterministic_int(seed + 500, 0, 10)
             lucky_date = today + timedelta(days=days_add)
             
             day_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
@@ -721,7 +809,8 @@ class MysteryFortuneApp:
             
             lunar = self.get_lunar_date(lucky_date)
             
-            luck_level = random.choice(["★★★★★ 大吉", "★★★★☆ 上吉", "★★★☆☆ 中吉"])
+            luck_levels = ["★★★★★ 大吉", "★★★★☆ 上吉", "★★★☆☆ 中吉"]
+            luck_level = luck_levels[self._deterministic_int(seed + 1000, 0, 2)]
             luck_color = self.colors['gold'] if "大吉" in luck_level else self.colors['green']
             
             tk.Label(day_frame, text=f"📆 {date_str}", font=("Microsoft YaHei", 11, "bold"),
@@ -800,8 +889,8 @@ class MysteryFortuneApp:
         yiji_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
         yiji_frame.pack(fill=tk.X, padx=10, pady=8)
         
-        yi_list = random.sample(list(yi_explanations.keys()), 5)
-        ji_list = random.sample(list(ji_explanations.keys()), 4)
+        yi_list = self._deterministic_slice(list(yi_explanations.keys()), 5, self._get_date_seed(today))
+        ji_list = self._deterministic_slice(list(ji_explanations.keys()), 4, self._get_date_seed(today) + 1000)
         
         # 宜
         yi_frame = tk.Frame(yiji_frame, bg=self.colors['bg_card'])
@@ -825,15 +914,43 @@ class MysteryFortuneApp:
         extra_frame = tk.Frame(scroll_frame, bg=self.colors['bg_hover'])
         extra_frame.pack(fill=tk.X, padx=10, pady=8)
         
+        # 使用统一的每日冲煎计算
+        daily_info = self.get_daily_chongsha(today)
+                
         extras = [
-            ("冲煞", f"冲{random.choice(self.shengxiao)} 煞{random.choice(['东','西','南','北'])}"),
-            ("吉神", random.choice(["天德", "月德", "天恩", "福星", "天喜"])),
-            ("凶神", random.choice(["五鬼", "死气", "白虎", "天刑", "朱雀"])),
+            ("冲煎", f"冲{daily_info['chong_sx']} 煎{daily_info['sha_dir']}"),
+            ("吉神", daily_info['ji_shen']),
+            ("凶神", daily_info['xiong_shen']),
         ]
         
         for label, value in extras:
             tk.Label(extra_frame, text=f"{label}：{value}", font=("Microsoft YaHei", 10),
                     fg=self.colors['text'], bg=self.colors['bg_hover']).pack(side=tk.LEFT, padx=15, pady=10)
+        
+        # === 冲煎吉凶详解 ===
+        chongsha_explanations = {
+            'chong': {'鼠':'属鼠者今日与日支相冲，宜静不宜动。','牛':'属牛者今日与日支相冲，宜保守稳重。','虎':'属虎者今日与日支相冲，注意控制情绪。','兔':'属兔者今日与日支相冲，宜低调行事。','龙':'属龙者今日与日支相冲，谨慎为上。','蛇':'属蛇者今日与日支相冲，守住本分。','马':'属马者今日与日支相冲，注意安全。','羊':'属羊者今日与日支相冲，宜守不宜攻。','猴':'属猴者今日与日支相冲，稳健为上。','鸡':'属鸡者今日与日支相冲，宜缓不宜急。','狗':'属狗者今日与日支相冲，避免口舌是非。','猪':'属猪者今日与日支相冲，不宜张扬。'},
+            'sha': {'东':'煎东方，今日不宜向东方行事或远行。','西':'煎西方，今日不宜向西方行事或远行。','南':'煎南方，今日不宜向南方行事或远行。','北':'煎北方，今日不宜向北方行事或远行。'},
+            'ji_shen': {'天德':'【天德】为上吉之神，主福德，诸事皆宜。','月德':'【月德】主贵人相助，办事顺利。','天恩':'【天恩】主上天降福，宜广结善缘。','福星':'【福星】主福禄寿喜，宜办喜事。','文昌':'【文昌】主文运学业，利于考试学习。','驿马':'【驿马】主出行迁徙，利于出差旅游。','天喜':'【天喜】主喜事临门，宜婚嘉庆典。','玉堂':'【玉堂】主贵人健康，宜求医置产。'},
+            'xiong_shen': {'五鬼':'【五鬼】主破财疾病，宜谨慎理财。','死气':'【死气】主不吉，宜避免探病吃丧。','白虎':'【白虎】主血光争斗，谨防意外。','天刑':'【天刑】主刑罚讼争，和气为贵。','朱雀':'【朱雀】主口舌是非，少说多做。','天狗':'【天狗】主小人暗算，谨慎交友。'}
+        }
+        
+        chong_exp = chongsha_explanations['chong'].get(daily_info['chong_sx'], '')
+        sha_exp = chongsha_explanations['sha'].get(daily_info['sha_dir'], '')
+        ji_shen_first = daily_info['ji_shen'].split('、')[0]
+        ji_shen_exp = chongsha_explanations['ji_shen'].get(ji_shen_first, '')
+        xiong_exp = chongsha_explanations['xiong_shen'].get(daily_info['xiong_shen'], '')
+        
+        tk.Label(scroll_frame, text="📚 冲煎吉凶详解", font=("Microsoft YaHei", 13, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_dark']).pack(anchor="w", padx=15, pady=(15, 8))
+        
+        chongsha_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        chongsha_frame.pack(fill=tk.X, padx=10, pady=3)
+        
+        chongsha_text = f"⚡ 冲{daily_info['chong_sx']}：{chong_exp}\n\n🧭 煎{daily_info['sha_dir']}：{sha_exp}\n\n🌟 吉神：{ji_shen_exp}\n\n👹 凶神：{xiong_exp}"
+        tk.Label(chongsha_frame, text=chongsha_text, font=("Microsoft YaHei", 10),
+                fg=self.colors['text'], bg=self.colors['bg_card'],
+                wraplength=680, justify=tk.LEFT, anchor="w").pack(fill=tk.X, padx=12, pady=10)
         
         # === 宜事详解 ===
         tk.Label(scroll_frame, text="✅ 今日宜事详解", font=("Microsoft YaHei", 13, "bold"),
@@ -909,8 +1026,8 @@ class MysteryFortuneApp:
         male = self.male_var.get()
         female = self.female_var.get()
         
-        # 配对结果
-        score = random.randint(60, 99)
+        # 基于生肖配对表确定性计算分数
+        score = self._get_zodiac_score(male, female)
         
         if score >= 90:
             level = "天作之合"
@@ -953,12 +1070,16 @@ class MysteryFortuneApp:
                 fg=self.colors['text'], bg=self.colors['bg_hover'],
                 wraplength=500).pack(pady=10)
         
-        # 详细分析
+        # 详细分析（基于生肖索引确定性计算）
+        m_idx = self.shengxiao.index(male)
+        f_idx = self.shengxiao.index(female)
+        detail_seed = m_idx * 12 + f_idx
+        
         details = [
-            ("性格相合度", random.randint(70, 95)),
-            ("价值观契合", random.randint(65, 90)),
-            ("生活习惯", random.randint(60, 95)),
-            ("财运互补", random.randint(70, 90)),
+            ("性格相合度", 70 + self._deterministic_int(detail_seed, 0, 24)),
+            ("价值观契合", 65 + self._deterministic_int(detail_seed + 100, 0, 29)),
+            ("生活习惯", 60 + self._deterministic_int(detail_seed + 200, 0, 34)),
+            ("财运互补", 70 + self._deterministic_int(detail_seed + 300, 0, 24)),
         ]
         
         detail_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
@@ -996,8 +1117,10 @@ class MysteryFortuneApp:
         chong_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
         chong_frame.pack(fill=tk.X, padx=10, pady=10)
         
-        chong_shengxiao = random.choice(self.shengxiao)
-        sha_direction = random.choice(['东', '西', '南', '北'])
+        # 使用统一的每日冲煎计算
+        daily_info = self.get_daily_chongsha(today)
+        chong_shengxiao = daily_info['chong_sx']
+        sha_direction = daily_info['sha_dir']
         
         chong_info = tk.Frame(chong_frame, bg=self.colors['bg_card'])
         chong_info.pack(fill=tk.X, padx=15, pady=10)
@@ -1023,7 +1146,8 @@ class MysteryFortuneApp:
             ("❌ 忌远行", "不宜出远门，途中多有阻碍"),
         ]
         
-        selected_taboos = random.sample(taboos, random.randint(3, 5))
+        # 基于日期确定性选择禁忌
+        selected_taboos = self._deterministic_slice(taboos, 4, self._get_date_seed(today) + 2000)
         
         for title, desc in selected_taboos:
             item_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
@@ -1132,6 +1256,71 @@ class MysteryFortuneApp:
         month_idx = (date.month + 10) % 12
         day_idx = (date.day + 18) % 30
         return f"{self.lunar_months[month_idx]}{self.lunar_days[day_idx]}"
+    
+    def get_daily_chongsha(self, date: datetime = None) -> Dict[str, str]:
+        """基于传统命理学计算每日冲煎信息（确保各板块一致）
+        
+        Returns:
+            Dict包含: day_gan, day_zhi, chong_sx, sha_dir, ji_shen
+        """
+        if date is None:
+            date = datetime.now()
+        
+        date_key = f"{date.year}-{date.month}-{date.day}"
+        
+        # 缓存当天数据
+        if self._daily_cache_date == date_key and self._daily_cache:
+            return self._daily_cache
+        
+        # 基准日：2024年1月1日 = 甲辰日（天干索引0，地支索引4）
+        base_date = datetime(2024, 1, 1)
+        base_gan_idx = 0  # 甲
+        base_zhi_idx = 4  # 辰
+        
+        # 计算与基准日的天数差
+        diff_days = (date - base_date).days
+        
+        # 干支循环（处理负数情况）
+        gan_idx = ((base_gan_idx + diff_days) % 10 + 10) % 10
+        zhi_idx = ((base_zhi_idx + diff_days) % 12 + 12) % 12
+        
+        # 根据日支计算冲的生肖（地支六冲）
+        chong_zhi_idx = self.chong_map[zhi_idx]
+        chong_sx = self.shengxiao[chong_zhi_idx]
+        
+        # 根据日支计算煎方
+        sha_dir = self.sha_map[zhi_idx]
+        
+        # 计算吉神（基于月份和日干）
+        month = date.month
+        tian_de_gan = [6, 7, 8, 9, 0, 2, 6, 7, 8, 9, 0, 2]
+        yue_de_gan = [8, 0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0]
+        
+        ji_shen_list = []
+        if gan_idx == tian_de_gan[month - 1]:
+            ji_shen_list.append('天德')
+        if gan_idx == yue_de_gan[month - 1]:
+            ji_shen_list.append('月德')
+        if not ji_shen_list:
+            other_ji_shen = ['天恩', '福星', '文昌', '驿马', '天喜', '玉堂']
+            ji_shen_list.append(other_ji_shen[(gan_idx + month) % len(other_ji_shen)])
+        
+        # 计算凶神（基于日支）
+        xiong_shen_list = ['五鬼', '死气', '白虎', '天刑', '朱雀', '天狗']
+        xiong_shen = xiong_shen_list[zhi_idx % len(xiong_shen_list)]
+        
+        self._daily_cache = {
+            'day_gan': self.tiangan[gan_idx],
+            'day_zhi': self.dizhi[zhi_idx],
+            'chong_sx': chong_sx,
+            'chong_zhi': self.dizhi[chong_zhi_idx],
+            'sha_dir': sha_dir,
+            'ji_shen': '、'.join(ji_shen_list),
+            'xiong_shen': xiong_shen
+        }
+        self._daily_cache_date = date_key
+        
+        return self._daily_cache
     
     def run(self):
         self.root.mainloop()

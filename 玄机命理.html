@@ -429,6 +429,10 @@
                 <span class="icon">🔮</span>
                 <span>算命</span>
             </div>
+            <div class="nav-item" onclick="showPage('auspicious')">
+                <span class="icon">📅</span>
+                <span>吉日</span>
+            </div>
             <div class="nav-item" onclick="showPage('almanac')">
                 <span class="icon">📜</span>
                 <span>黄历</span>
@@ -505,16 +509,130 @@ function cacheDOM() {
     DOM.navItems = document.querySelectorAll('.nav-item');
 }
 
+// ============ 每日信息（基于传统命理学计算，确保各板块一致） ============
+const DailyInfo = {
+    _cache: null,
+    _cacheDate: null,
+    
+    // 地支六冲关系：子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲
+    // 索引对应：0-子 1-丑 2-寅 3-卯 4-辰 5-巳 6-午 7-未 8-申 9-酉 10-戌 11-亥
+    CHONG_MAP: [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], // 日支索引 -> 冲的地支索引
+    
+    // 煎方规则：申子辰日煎南、亥卯未日煎西、寅午戌日煎北、巳酉丑日煎东
+    SHA_MAP: {
+        0: '南', 4: '南', 8: '南',   // 子、辰、申日煎南
+        3: '西', 7: '西', 11: '西',  // 卯、未、亥日煎西
+        2: '北', 6: '北', 10: '北',  // 寅、午、戌日煎北
+        1: '东', 5: '东', 9: '东'    // 丑、巳、酉日煎东
+    },
+    
+    // 计算某日的日干支（基准2024年1月1日为甲辰日推算）
+    getDayGanZhi(date) {
+        // 基准日：2024年1月1日是甲辰日（天干索引0，地支索引4）
+        const baseDate = new Date(2024, 0, 1);
+        const baseGanIdx = 0;  // 甲
+        const baseZhiIdx = 4;  // 辰
+        
+        // 计算与基准日的天数差
+        const diffDays = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // 干支循环
+        const ganIdx = ((baseGanIdx + diffDays) % 10 + 10) % 10;
+        const zhiIdx = ((baseZhiIdx + diffDays) % 12 + 12) % 12;
+        
+        return {
+            gan: CONFIG.TIANGAN[ganIdx],
+            zhi: CONFIG.DIZHI[zhiIdx],
+            ganIdx: ganIdx,
+            zhiIdx: zhiIdx
+        };
+    },
+    
+    // 计算吉神（基于月份和日干）
+    getJiShen(date, ganIdx) {
+        const month = date.getMonth() + 1;
+        // 天德：正七庚、二八辛、三九壬、四十癸、五十一甲、六十二丙
+        const tianDeGan = [6, 7, 8, 9, 0, 2, 6, 7, 8, 9, 0, 2]; // 各月天德对应的天干索引
+        const yueDeGan = [8, 0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0];  // 各月月德对应的天干索引
+        
+        const jiShenList = [];
+        if (ganIdx === tianDeGan[month - 1]) jiShenList.push('天德');
+        if (ganIdx === yueDeGan[month - 1]) jiShenList.push('月德');
+        if (jiShenList.length === 0) {
+            // 其他吉神简化计算
+            const otherJiShen = ['天恩', '福星', '文昌', '驿马', '天喜', '玉堂'];
+            jiShenList.push(otherJiShen[(ganIdx + month) % otherJiShen.length]);
+        }
+        return jiShenList.join('、');
+    },
+    
+    // 计算凶神（基于日支）
+    getXiongShen(zhiIdx) {
+        // 凶神与日支相关，简化计算
+        const xiongShenList = ['五鬼', '死气', '白虎', '天刑', '朱雀', '天狗'];
+        return xiongShenList[zhiIdx % xiongShenList.length];
+    },
+    
+    get() {
+        const today = new Date();
+        const dateKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        
+        // 缓存当天数据，避免重复计算
+        if (this._cacheDate === dateKey && this._cache) {
+            return this._cache;
+        }
+        
+        // 计算今日干支
+        const dayGZ = this.getDayGanZhi(today);
+        
+        // 根据日支计算冲的生肖（地支六冲）
+        const chongZhiIdx = this.CHONG_MAP[dayGZ.zhiIdx];
+        const chongSx = CONFIG.SHENGXIAO[chongZhiIdx];
+        
+        // 根据日支计算煎方
+        const shaDir = this.SHA_MAP[dayGZ.zhiIdx];
+        
+        // 计算吉神
+        const jiShen = this.getJiShen(today, dayGZ.ganIdx);
+        
+        // 计算凶神
+        const xiongShen = this.getXiongShen(dayGZ.zhiIdx);
+        
+        this._cache = {
+            dayGan: dayGZ.gan,
+            dayZhi: dayGZ.zhi,
+            chongSx: chongSx,
+            chongZhi: CONFIG.DIZHI[chongZhiIdx],
+            shaDir: shaDir,
+            jiShen: jiShen,
+            xiongShen: xiongShen
+        };
+        this._cacheDate = dateKey;
+        
+        return this._cache;
+    }
+};
+
 // ============ 工具函数 ============
 const Utils = {
-    // 获取指定范围随机整数
-    randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+    // 基于种子的确定性随机数生成（保证同样输入同样输出）
+    seededRandom(seed) {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
     },
-    // 随机打乱数组并取前n个
-    shuffleAndSlice(arr, n) {
-        return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+    
+    // 确定性整数（基于种子）
+    deterministicInt(seed, min, max) {
+        return min + Math.floor(this.seededRandom(seed) * (max - min + 1));
     },
+    
+    // 确定性打乱数组并取前n个（基于种子）
+    deterministicSlice(arr, n, seed) {
+        const indexed = arr.map((item, i) => ({ item, sort: this.seededRandom(seed + i) }));
+        indexed.sort((a, b) => a.sort - b.sort);
+        return indexed.slice(0, n).map(x => x.item);
+    },
+    
     // 计算日期差（天数）
     daysBetween(date1, date2) {
         return Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
@@ -538,6 +656,10 @@ const Utils = {
             fragment.appendChild(option);
         });
         element.appendChild(fragment);
+    },
+    // 获取日期种子（用于当日确定性计算）
+    getDateSeed(date) {
+        return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
     }
 };
 
@@ -597,7 +719,7 @@ const LunarCalendar = {
 function getLunarDate(date) { return LunarCalendar.getDate(date); }
 
 // ============ 页面导航模块 ============
-const NAV_INDEX = Object.freeze({home:0, fortune:1, almanac:2, marriage:3, taboo:4});
+const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4, taboo:5});
 
 function showPage(page) {
     // 使用缓存的DOM元素
@@ -715,10 +837,12 @@ const BaziCalculator = {
         return { dayWx, isStrong, xiShen, jiShen, shengWo, woSheng, keWo, woKe };
     },
     
-    // 获取格局
-    getGeju() {
+    // 获取格局（基于八字确定性计算）
+    getGeju(bazi) {
         const gejuList = ['正印格','偏印格','食神格','伤官格','正财格','偏财格','正官格','七杀格'];
-        return gejuList[Utils.randomInt(0, gejuList.length - 1)];
+        // 基于日柱干支确定格局
+        const seed = CONFIG.TIANGAN.indexOf(bazi.dayGan) * 12 + CONFIG.DIZHI.indexOf(bazi.dayZhi);
+        return gejuList[seed % gejuList.length];
     }
 };
 
@@ -812,7 +936,7 @@ function calculateFortune() {
     const wxCount = BaziCalculator.calculateWuxing(bazi);
     const analysis = BaziCalculator.analyzeStrength(dayGan, wxCount);
     const {dayWx, isStrong, xiShen, jiShen} = analysis;
-    const geju = BaziCalculator.getGeju();
+    const geju = BaziCalculator.getGeju(bazi);
     
     // 命理解读
     const readings = {
@@ -944,16 +1068,23 @@ function calculateFortune() {
 function searchAuspicious() {
     const event = DOM.eventType?.value || '结婚嫁娶';
     const now = new Date();
+    const baseSeed = Utils.getDateSeed(now);
+    
+    // 事项类型索引（用于确定性计算）
+    const eventTypes = ['结婚嫁娶', '搬家入宅', '开业开张', '出行远行', '签约交易'];
+    const eventIdx = eventTypes.indexOf(event) >= 0 ? eventTypes.indexOf(event) : 0;
     
     let html = `<div class="card"><div class="card-title">📅 近期「${event}」吉日</div>`;
     
     for (let i = 0; i < 10; i++) {
-        const daysAdd = 3 + i * 7 + Utils.randomInt(0, 4);
+        // 基于日期、事项和序号确定性计算天数
+        const seed = baseSeed + eventIdx * 100 + i * 7;
+        const daysAdd = 3 + i * 7 + Utils.deterministicInt(seed, 0, 4);
         const luckyDate = Utils.addDays(now, daysAdd);
         const dateStr = `${luckyDate.getMonth()+1}月${luckyDate.getDate()}日 周${CONFIG.WEEKDAYS[luckyDate.getDay()]}`;
         const lunar = getLunarDate(luckyDate);
         const levels = ['★★★★★ 大吉', '★★★★☆ 上吉', '★★★☆☆ 中吉'];
-        const level = levels[Utils.randomInt(0, 2)];
+        const level = levels[Utils.deterministicInt(seed + 1000, 0, 2)];
         
         html += `
             <div class="lucky-day-item">
@@ -971,18 +1102,58 @@ function searchAuspicious() {
 }
 
 // ============ 老黄历 ============
+const YI_EXPLANATIONS = {
+    '嫁娶': '【嫁娶】今日适合举办婚礼、订婚、提亲等喜事。选择此日成婚，夫妻和睦，白头偕老。',
+    '祭祀': '【祭祀】今日适合祭拜神明、祖先、上香进贡。诚心祭拜，可保家宅平安。',
+    '出行': '【出行】今日适合外出、旅游、出差、探亲访友。路途平安顺利。',
+    '开市': '【开市】今日适合店铺开业、公司开张。选此日开业，财源广进。',
+    '纳财': '【纳财】今日适合收取钱财、结算账款。财运亨通，进财顺利。',
+    '动土': '【动土】今日适合建房动工、地基开挖。动土大吉，工程顺利。',
+    '安床': '【安床】今日适合安置床铺。床位安定，睡眠安稳，家庭和睦。',
+    '入宅': '【入宅】今日适合搬家入住、乔迁新居。入住新居后家运亨通。',
+    '开光': '【开光】今日适合佛像开光、神位开光、吉祥物品开光。开光后灵气十足。',
+    '修造': '【修造】今日适合房屋修缮、装修改造。工程顺利，质量保证。'
+};
+const JI_EXPLANATIONS = {
+    '诉讼': '【诉讼】今日不宜打官司、起诉。若有纠纷，宜和解为上，否则官司缠身。',
+    '安葬': '【安葬】今日不宜下葬、安放遗骸。宜另择吉日。',
+    '破土': '【破土】今日不宜挖掘土地、墓地动工。恐惊动土神。',
+    '伐木': '【伐木】今日不宜砂伐树木。树木有灵，随意砍伐恐伤元气。',
+    '作灶': '【作灶】今日不宜安装灶台。灶为家中财库，安装不当影响财运。',
+    '掘井': '【掘井】今日不宜挖掘水井。井为生命之源，择日不当恐影响健康。',
+    '栽种': '【栽种】今日不宜种植花草树木。植物难以成活，或生长不旺。'
+};
+const CHONGSHA_EXPLANATIONS = {
+    chong: {鼠:'属鼠者今日与日支相冲，宜静不宜动。',牛:'属牛者今日与日支相冲，宜保守稳重。',虎:'属虎者今日与日支相冲，注意控制情绪。',兔:'属兔者今日与日支相冲，宜低调行事。',龙:'属龙者今日与日支相冲，谨慎为上。',蛇:'属蛇者今日与日支相冲，守住本分。',马:'属马者今日与日支相冲，注意安全。',羊:'属羊者今日与日支相冲，宜守不宜攻。',猴:'属猴者今日与日支相冲，稳健为上。',鸡:'属鸡者今日与日支相冲，宜缓不宜急。',狗:'属狗者今日与日支相冲，避免口舌是非。',猪:'属猪者今日与日支相冲，不宜张扬。'},
+    sha: {东:'煎东方，今日不宜向东方行事或远行。',西:'煎西方，今日不宜向西方行事或远行。',南:'煎南方，今日不宜向南方行事或远行。',北:'煎北方，今日不宜向北方行事或远行。'},
+    jiShen: {天德:'【天德】为上吉之神，主福德，诸事皆宜。',月德:'【月德】主贵人相助，办事顺利。',天恩:'【天恩】主上天降福，宜广结善缘。',福星:'【福星】主福禄寿喜，宜办喜事。',文昌:'【文昌】主文运学业，利于考试学习。',驿马:'【驿马】主出行迁徙，利于出差旅游。',天喜:'【天喜】主喜事临门，宜婚嘉庆典。',玉堂:'【玉堂】主贵人健康，宜求医置产。'},
+    xiongShen: {五鬼:'【五鬼】主破财疾病，宜谨慎理财。',死气:'【死气】主不吉，宜避免探病吃丧。',白虎:'【白虎】主血光争斗，谨防意外。',天刑:'【天刑】主刑罚讼争，和气为贵。',朱雀:'【朱雀】主口舌是非，少说多做。',天狗:'【天狗】主小人暗算，谨慎交友。'}
+};
+
 function showAlmanac() {
     const now = new Date();
+    const dateSeed = Utils.getDateSeed(now);
     const lunar = getLunarDate(now);
     const yearGz = CONFIG.TIANGAN[(now.getFullYear()-4)%10] + CONFIG.DIZHI[(now.getFullYear()-4)%12];
     const sx = CONFIG.SHENGXIAO[(now.getFullYear()-4)%12];
     
-    const yiList = Utils.shuffleAndSlice(['嫁娶', '祭祀', '出行', '开市', '纳财', '动土', '安床', '入宅'], 5);
-    const jiList = Utils.shuffleAndSlice(['诉讼', '安葬', '破土', '伐木', '作灶', '掘井'], 4);
+    // 基于日期确定性选择宜忌
+    const yiList = Utils.deterministicSlice(Object.keys(YI_EXPLANATIONS), 5, dateSeed);
+    const jiList = Utils.deterministicSlice(Object.keys(JI_EXPLANATIONS), 4, dateSeed + 1000);
     
-    const chongSx = CONFIG.SHENGXIAO[Utils.randomInt(0, 11)];
-    const shaDir = ['东', '西', '南', '北'][Utils.randomInt(0, 3)];
-    const jiShen = ['天德','月德','天恩','福星'][Utils.randomInt(0, 3)];
+    const daily = DailyInfo.get();
+    const chongSx = daily.chongSx;
+    const shaDir = daily.shaDir;
+    const jiShen = daily.jiShen;
+    const xiongShen = daily.xiongShen;
+    
+    const chongExp = CHONGSHA_EXPLANATIONS.chong[chongSx] || '';
+    const shaExp = CHONGSHA_EXPLANATIONS.sha[shaDir] || '';
+    const jiShenExp = CHONGSHA_EXPLANATIONS.jiShen[jiShen.split('、')[0]] || '';
+    const xiongExp = CHONGSHA_EXPLANATIONS.xiongShen[xiongShen] || '';
+    
+    const yiHtml = yiList.map(y => `<div style="background:var(--bg-card);border-radius:8px;padding:10px;margin:5px 0;font-size:0.85rem;">${YI_EXPLANATIONS[y]}</div>`).join('');
+    const jiHtml = jiList.map(j => `<div style="background:var(--bg-card);border-radius:8px;padding:10px;margin:5px 0;font-size:0.85rem;">${JI_EXPLANATIONS[j]}</div>`).join('');
     
     DOM.almanacContent.innerHTML = `
         <div class="almanac-date">
@@ -994,30 +1165,92 @@ function showAlmanac() {
                 <div class="ganzhi">${yearGz}年【${sx}年】</div>
             </div>
         </div>
-        
-        <div class="yiji-box">
-            <span class="yiji-label yi-label">宜</span>
-            <span class="yiji-content">${yiList.join('  ')}</span>
+        <div class="yiji-box"><span class="yiji-label yi-label">宜</span><span class="yiji-content">${yiList.join('  ')}</span></div>
+        <div class="yiji-box"><span class="yiji-label ji-label">忌</span><span class="yiji-content">${jiList.join('  ')}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;font-size:0.9rem;">
+            <span>⚡ 冲${chongSx}</span><span>🧭 煎${shaDir}</span>
+            <span>🌟 吉神：${jiShen}</span><span style="color:var(--red);">👹 凶神：${xiongShen}</span>
         </div>
-        
-        <div class="yiji-box">
-            <span class="yiji-label ji-label">忌</span>
-            <span class="yiji-content">${jiList.join('  ')}</span>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--cyan);">📚 冲煎吉凶详解</div>
+            <div style="background:var(--bg-hover);border-radius:8px;padding:12px;margin:8px 0;font-size:0.85rem;line-height:1.8;">
+                <div style="margin-bottom:6px;"><span style="color:var(--red);font-weight:bold;">⚡ 冲${chongSx}</span>：${chongExp}</div>
+                <div style="margin-bottom:6px;"><span style="color:var(--orange);font-weight:bold;">🧭 煎${shaDir}</span>：${shaExp}</div>
+                <div style="margin-bottom:6px;"><span style="color:var(--green);font-weight:bold;">🌟 吉神</span>：${jiShenExp}</div>
+                <div><span style="color:var(--red);font-weight:bold;">👹 凶神</span>：${xiongExp}</div>
+            </div>
         </div>
-        
-        <div style="display:flex; gap:20px; margin-top:15px; font-size:0.9rem;">
-            <span>⚡ 冲${chongSx}</span>
-            <span>🧭 煞${shaDir}</span>
-            <span>🌟 吉神：${jiShen}</span>
-        </div>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--green);">✅ 今日宜事详解</div>${yiHtml}</div>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--red);">❌ 今日忌事详解</div>${jiHtml}</div>
+        <div class="hint-text" style="margin-top:20px;">✨ 顺应天时，趋吉避凶，平安顺遂 ✨</div>
     `;
 }
 
 // ============ 婚姻配对 ============
+// 生肖配对表（基于传统命理学）
+const ZODIAC_MATCH = {
+    // 三合局：申子辰合水、亥卯未合木、寅午戌合火、巳酉丑合金
+    sanhe: [[0,4,8], [3,7,11], [2,6,10], [1,5,9]], // 索引对应生肖
+    // 六合：子丑、寅亥、卯戌、辰酉、巳申、午未
+    liuhe: [[0,1], [2,11], [3,10], [4,9], [5,8], [6,7]],
+    // 六冲：子午、丑未、寅申、卯酉、辰戌、巳亥
+    liuchong: [[0,6], [1,7], [2,8], [3,9], [4,10], [5,11]],
+    // 六害：子未、丑午、寅巳、卯辰、申亥、酉戌
+    liuhai: [[0,7], [1,6], [2,5], [3,4], [8,11], [9,10]]
+};
+
+function getZodiacScore(male, female) {
+    const mIdx = CONFIG.SHENGXIAO.indexOf(male);
+    const fIdx = CONFIG.SHENGXIAO.indexOf(female);
+    
+    // 检查三合（+25分）
+    let sanheBonus = 0;
+    for (const group of ZODIAC_MATCH.sanhe) {
+        if (group.includes(mIdx) && group.includes(fIdx)) {
+            sanheBonus = 25;
+            break;
+        }
+    }
+    
+    // 检查六合（+20分）
+    let liuheBonus = 0;
+    for (const pair of ZODIAC_MATCH.liuhe) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuheBonus = 20;
+            break;
+        }
+    }
+    
+    // 检查六冲（-20分）
+    let liuchongPenalty = 0;
+    for (const pair of ZODIAC_MATCH.liuchong) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuchongPenalty = -20;
+            break;
+        }
+    }
+    
+    // 检查六害（-10分）
+    let liuhaiPenalty = 0;
+    for (const pair of ZODIAC_MATCH.liuhai) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuhaiPenalty = -10;
+            break;
+        }
+    }
+    
+    // 基础分70分
+    const baseScore = 70;
+    const totalScore = Math.min(99, Math.max(60, baseScore + sanheBonus + liuheBonus + liuchongPenalty + liuhaiPenalty));
+    
+    return totalScore;
+}
+
 function calculateMatch() {
     const male = DOM.maleZodiac.value;
     const female = DOM.femaleZodiac.value;
-    const score = Utils.randomInt(60, 99);
+    
+    // 基于生肖配对表确定性计算分数
+    const score = getZodiacScore(male, female);
     
     let level, color, desc;
     if (score >= 90) {
@@ -1034,11 +1267,16 @@ function calculateMatch() {
         desc = '二人性格有所冲突，需要更多沟通与理解，建议婚前多加考虑。';
     }
     
+    // 基于生肖索引确定性计算详情
+    const mIdx = CONFIG.SHENGXIAO.indexOf(male);
+    const fIdx = CONFIG.SHENGXIAO.indexOf(female);
+    const detailSeed = mIdx * 12 + fIdx;
+    
     const details = [
-        ['性格相合度', Utils.randomInt(70, 94)],
-        ['价值观契合', Utils.randomInt(65, 94)],
-        ['生活习惯', Utils.randomInt(60, 94)],
-        ['财运互补', Utils.randomInt(70, 94)]
+        ['性格相合度', 70 + Utils.deterministicInt(detailSeed, 0, 24)],
+        ['价值观契合', 65 + Utils.deterministicInt(detailSeed + 100, 0, 29)],
+        ['生活习惯', 60 + Utils.deterministicInt(detailSeed + 200, 0, 34)],
+        ['财运互补', 70 + Utils.deterministicInt(detailSeed + 300, 0, 24)]
     ];
     
     DOM.matchResult.innerHTML = `
@@ -1064,16 +1302,22 @@ function calculateMatch() {
 
 // ============ 今日禁忌 ============
 function showTaboo() {
-    const chongSx = CONFIG.SHENGXIAO[Utils.randomInt(0, 11)];
-    const shaDir = ['东', '西', '南', '北'][Utils.randomInt(0, 3)];
+    // 使用统一的每日信息
+    const daily = DailyInfo.get();
+    const chongSx = daily.chongSx;
+    const shaDir = daily.shaDir;
+    const now = new Date();
+    const dateSeed = Utils.getDateSeed(now);
     
-    const taboos = Utils.shuffleAndSlice([
+    // 基于日期确定性选择禁忌
+    const allTaboos = [
         ['忌嫁娶', '今日不宜举办婚嫁之事，恐有不顺'],
         ['忌安葬', '不宜办理丧葬事宜，择日再行'],
         ['忌动土', '不宜破土动工，恐惊动土神'],
         ['忌开市', '不宜开张营业，财运不济'],
         ['忌远行', '不宜出远门，途中多有阻碍']
-    ], 4);
+    ];
+    const taboos = Utils.deterministicSlice(allTaboos, 4, dateSeed + 2000);
     
     const tips = [
         '📿 佩戴本命佛或护身符可化解部分不利',
