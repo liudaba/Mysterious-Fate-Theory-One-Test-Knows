@@ -1,11 +1,22 @@
-# 玄机命理 - 神秘命理软件
-# 包含：算命大师、黄道吉日、老黄历、婚姻配对、今日禁忌
+"""
+玄机命理 - 神秘命理软件
+
+包含功能模块：
+    - 算命大师：八字命理分析、五行解读、流年运势
+    - 黄道吉日：择日择时、事项吉日查询
+    - 老黄历：每日宜忌、农历信息
+    - 婚姻配对：生肖配对、契合度分析
+    - 今日禁忌：冲煞信息、化解建议
+
+Author: Mystery Fortune Team
+"""
 
 import tkinter as tk
 from tkinter import ttk, messagebox
 import random
 from datetime import datetime, timedelta
 import calendar
+from typing import Dict, List, Tuple, Optional, Callable, Any
 
 class MysteryFortuneApp:
     def __init__(self):
