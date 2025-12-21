@@ -1399,15 +1399,19 @@ class MysteryFortuneApp:
         header_row.pack(fill=tk.X, padx=10, pady=(0, 5))
         
         tk.Label(header_row, text="年龄/年份", font=("Microsoft YaHei", 9, "bold"),
-                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=16, anchor="w").pack(side=tk.LEFT, padx=8)
-        tk.Label(header_row, text="强度", font=("Microsoft YaHei", 9, "bold"),
-                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=26, anchor="center").pack(side=tk.LEFT, padx=5)
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=20, anchor="w").pack(side=tk.LEFT, padx=8)
+        # 强度栏目使用固定像素宽度的Frame容器
+        strength_header = tk.Frame(header_row, bg=self.colors['bg_card'], width=200, height=20)
+        strength_header.pack(side=tk.LEFT, padx=5)
+        strength_header.pack_propagate(False)
+        tk.Label(strength_header, text="强度", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card']).pack(expand=True)
         tk.Label(header_row, text="", font=("Microsoft YaHei", 9, "bold"),
-                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=5).pack(side=tk.LEFT, padx=5)
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=6).pack(side=tk.LEFT, padx=5)
         tk.Label(header_row, text="桃花质量", font=("Microsoft YaHei", 9, "bold"),
-                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=9, anchor="center").pack(side=tk.LEFT, padx=5)
-        tk.Label(header_row, text="成熟度", font=("Microsoft YaHei", 9, "bold"),
                 fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=10, anchor="center").pack(side=tk.LEFT, padx=5)
+        tk.Label(header_row, text="成熟度", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=8, anchor="center").pack(side=tk.LEFT, padx=5)
         
         for p in top_periods:
             period_row = tk.Frame(timeline_frame, bg=self.colors['bg_hover'])
@@ -1424,7 +1428,7 @@ class MysteryFortuneApp:
                 age_color = self.colors['text']
             
             tk.Label(period_row, text=age_text, font=("Microsoft YaHei", 10),
-                    fg=age_color, bg=self.colors['bg_hover'], width=16, anchor="w").pack(side=tk.LEFT, padx=8, pady=6)
+                    fg=age_color, bg=self.colors['bg_hover'], width=20, anchor="w").pack(side=tk.LEFT, padx=8, pady=6)
             
             # 桃花强度进度条
             bar_bg = tk.Frame(period_row, bg=self.colors['bg_card'], width=200, height=14)
@@ -1438,16 +1442,16 @@ class MysteryFortuneApp:
             
             # 百分比
             tk.Label(period_row, text=f"{p['strength']}%", font=("Microsoft YaHei", 10, "bold"),
-                    fg='#ff69b4', bg=self.colors['bg_hover'], width=5).pack(side=tk.LEFT, padx=5)
+                    fg='#ff69b4', bg=self.colors['bg_hover'], width=6).pack(side=tk.LEFT, padx=5)
             
             # 桃花质量
             quality, quality_desc, quality_color, maturity = self._get_peach_quality(p['strength'], p['age'], gender, seed)
             tk.Label(period_row, text=f"{quality}", font=("Microsoft YaHei", 9),
-                    fg=quality_color, bg=self.colors['bg_hover'], width=9, anchor="center").pack(side=tk.LEFT, padx=5)
+                    fg=quality_color, bg=self.colors['bg_hover'], width=10, anchor="center").pack(side=tk.LEFT, padx=5)
             
             # 成熟度
             tk.Label(period_row, text=f"{maturity}%", font=("Microsoft YaHei", 9),
-                    fg=self.colors['text_dim'], bg=self.colors['bg_hover'], width=10, anchor="center").pack(side=tk.LEFT, padx=5)
+                    fg=self.colors['text_dim'], bg=self.colors['bg_hover'], width=8, anchor="center").pack(side=tk.LEFT, padx=5)
         
         # === 桃花运综述 ===
         summary_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
