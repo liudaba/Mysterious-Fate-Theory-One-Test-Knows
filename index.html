@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>✨ 玄机命理 - 洞悉天机 ✨</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a1a;
+            --bg-card: #1a1a2e;
+            --bg-hover: #2a2a4a;
+            --gold: #ffea00;
+            --gold-dark: #ffc107;
+            --purple: #a855f7;
+            --purple-light: #d8b4fe;
+            --red: #ff5555;
+            --green: #22c55e;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --cyan: #00d4ff;
+            --orange: #ff9500;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .container { max-width: 100%; padding: 10px; }
+        
+        /* 顶部导航 */
+        .header {
+            text-align: center;
+            padding: 15px 10px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+            border-bottom: 2px solid var(--gold-dark);
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 234, 0, 0.5);
+        }
+        .header .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+        .date-info {
+            font-size: 0.8rem;
+            color: var(--purple-light);
+            margin-top: 8px;
+        }
+        
+        /* 底部导航栏 */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid var(--bg-hover);
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 5px 8px;
+            transition: all 0.3s;
+        }
+        .nav-item.active { color: var(--gold); }
+        .nav-item .icon { font-size: 1.3rem; margin-bottom: 2px; }
+        
+        /* 内容区 */
+        .content {
+            padding-bottom: 80px;
+        }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 卡片样式 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px;
+        }
+        .card-title {
+            color: var(--cyan);
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 首页功能卡片 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+        .feature-card {
+            background: var(--bg-hover);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .feature-card:active { transform: scale(0.95); }
+        .feature-card .icon { font-size: 2rem; margin-bottom: 8px; }
+        .feature-card .title { font-size: 0.95rem; font-weight: bold; }
+        .feature-card .desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 5px; }
+        
+        /* 输入组件 */
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .input-group label { font-size: 0.9rem; }
+        .input-group select, .input-group input {
+            background: var(--bg-hover);
+            border: 1px solid var(--purple);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .btn {
+            background: var(--purple);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px auto;
+            transition: all 0.3s;
+        }
+        .btn:active { transform: scale(0.95); opacity: 0.9; }
+        .btn-green { background: var(--green); }
+        .btn-red { background: var(--red); }
+        
+        /* 八字显示 */
+        .bazi-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .bazi-col {
+            background: var(--bg-hover);
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .bazi-col .label { font-size: 0.75rem; color: var(--text-dim); }
+        .bazi-col .value { font-size: 1rem; color: var(--gold); font-weight: bold; }
+        
+        /* 五行标签 */
+        .wuxing-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .wuxing-tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .wuxing-jin { background: #E8E8E8; color: #333; }
+        .wuxing-mu { background: var(--green); color: white; }
+        .wuxing-shui { background: var(--cyan); color: #333; }
+        .wuxing-huo { background: var(--red); color: white; }
+        .wuxing-tu { background: var(--gold-dark); color: #333; }
+        
+        /* 宜忌标签 */
+        .yiji-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            padding: 10px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+        }
+        .yiji-label {
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .yi-label { background: var(--green); }
+        .ji-label { background: var(--red); }
+        .yiji-content { font-size: 0.85rem; flex: 1; }
+        
+        /* 吉日列表 */
+        .lucky-day-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        .lucky-day-item .date { font-weight: bold; }
+        .lucky-day-item .lunar { font-size: 0.8rem; color: var(--purple-light); }
+        .lucky-day-item .level { font-size: 0.85rem; color: var(--gold); }
+        
+        /* 配对结果 */
+        .match-result {
+            text-align: center;
+            padding: 20px;
+        }
+        .match-score {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+        .match-level { font-size: 1.3rem; font-weight: bold; margin: 10px 0; }
+        .match-desc { font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; }
+        
+        /* 进度条 */
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        .progress-label { font-size: 0.85rem; width: 80px; }
+        .progress-bar {
+            flex: 1;
+            height: 12px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--purple);
+            border-radius: 6px;
+        }
+        .progress-value { font-size: 0.85rem; color: var(--gold); width: 40px; }
+        
+        /* 老黄历大日期 */
+        .almanac-date {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+        }
+        .almanac-day {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+        .almanac-info { flex: 1; }
+        .almanac-info .year { font-size: 1.1rem; }
+        .almanac-info .week { font-size: 0.95rem; color: var(--text-dim); }
+        .almanac-info .lunar { font-size: 0.95rem; color: var(--purple-light); }
+        .almanac-info .ganzhi { font-size: 0.9rem; color: var(--gold-dark); }
+        
+        /* 解读文本 */
+        .reading-item {
+            padding: 8px 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--bg-hover);
+        }
+        .reading-item:last-child { border-bottom: none; }
+        
+        /* 提示文字 */
+        .hint-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--gold);
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部 -->
+        <header class="header">
+            <h1>✨ 玄机命理 ✨</h1>
+            <div class="subtitle">洞悉天机 · 趋吉避凶</div>
+            <div class="date-info" id="dateInfo"></div>
+        </header>
+        
+        <!-- 内容区 -->
+        <main class="content">
+            <!-- 首页 -->
+            <div id="page-home" class="page active">
+                <div class="feature-grid">
+                    <div class="feature-card" onclick="showPage('fortune')">
+                        <div class="icon">🔮</div>
+                        <div class="title">算命大师</div>
+                        <div class="desc">八字命理分析</div>
+                    </div>
+                    <div class="feature-card" onclick="showPage('auspicious')">
+                        <div class="icon">📅</div>
+                        <div class="title">黄道吉日</div>
+                        <div class="desc">择取良辰吉日</div>
+                    </div>
+                    <div class="feature-card" onclick="showPage('almanac')">
+                        <div class="icon">📜</div>
+                        <div class="title">老黄历</div>
+                        <div class="desc">每日宜忌查询</div>
+                    </div>
+                    <div class="feature-card" onclick="showPage('marriage')">
+                        <div class="icon">💑</div>
+                        <div class="title">婚姻配对</div>
+                        <div class="desc">生肖姻缘测算</div>
+                    </div>
+                    <div class="feature-card" onclick="showPage('peach')">
+                        <div class="icon">🌸</div>
+                        <div class="title">桃花运</div>
+                        <div class="desc">姻缘时机预测</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 算命大师 -->
+            <div id="page-fortune" class="page">
+                <div class="card">
+                    <div class="card-title">🔮 输入生辰八字</div>
+                    <div class="input-group">
+                        <select id="birthYear"></select>
+                        <span>年</span>
+                        <select id="birthMonth"></select>
+                        <span>月</span>
+                        <select id="birthDay"></select>
+                        <span>日</span>
+                        <select id="birthHour"></select>
+                        <span>时</span>
+                    </div>
+                    <button class="btn" onclick="calculateFortune()">🔮 开始测算</button>
+                </div>
+                <div id="fortuneResult"></div>
+            </div>
+            
+            <!-- 黄道吉日 -->
+            <div id="page-auspicious" class="page">
+                <div class="card">
+                    <div class="card-title">📅 选择事项</div>
+                    <div class="input-group">
+                        <select id="eventType">
+                            <option>结婚嫁娶</option>
+                            <option>搬家入宅</option>
+                            <option>开业开张</option>
+                            <option>出行远行</option>
+                            <option>签约交易</option>
+                        </select>
+                        <button class="btn btn-green" onclick="searchAuspicious()">🔍 查询</button>
+                    </div>
+                </div>
+                <div id="auspiciousResult"></div>
+            </div>
+            
+            <!-- 老黄历 -->
+            <div id="page-almanac" class="page">
+                <div class="card" id="almanacContent"></div>
+            </div>
+            
+            <!-- 婚姻配对 -->
+            <div id="page-marriage" class="page">
+                <div class="card">
+                    <div class="card-title">💑 生肖配对</div>
+                    <div class="input-group" style="justify-content: center;">
+                        <span>👨</span>
+                        <select id="maleZodiac"></select>
+                        <span style="font-size: 1.5rem; color: var(--red);">❤</span>
+                        <select id="femaleZodiac"></select>
+                        <span>👩</span>
+                    </div>
+                    <button class="btn btn-red" onclick="calculateMatch()">💕 开始配对</button>
+                </div>
+                <div id="matchResult"></div>
+            </div>
+            
+            <!-- 桃花运 -->
+            <div id="page-peach" class="page">
+                <div class="card">
+                    <div class="card-title">🌸 桃花运测算</div>
+                    <div class="input-group">
+                        <label>出生日期：</label>
+                        <select id="peachYear"></select><span>年</span>
+                        <select id="peachMonth"></select><span>月</span>
+                        <select id="peachDay"></select><span>日</span>
+                    </div>
+                    <div class="input-group">
+                        <label>性别：</label>
+                        <select id="peachGender">
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <button class="btn" style="background:#ff69b4;" onclick="calculatePeachBlossom()">🌸 测算桃花运</button>
+                </div>
+                <div id="peachResult"></div>
+            </div>
+        </main>
+        
+        <!-- 底部导航 -->
+        <nav class="nav-bar">
+            <div class="nav-item active" onclick="showPage('home')">
+                <span class="icon">🏠</span>
+                <span>首页</span>
+            </div>
+            <div class="nav-item" onclick="showPage('fortune')">
+                <span class="icon">🔮</span>
+                <span>算命</span>
+            </div>
+            <div class="nav-item" onclick="showPage('auspicious')">
+                <span class="icon">📅</span>
+                <span>吉日</span>
+            </div>
+            <div class="nav-item" onclick="showPage('almanac')">
+                <span class="icon">📜</span>
+                <span>黄历</span>
+            </div>
+            <div class="nav-item" onclick="showPage('marriage')">
+                <span class="icon">💑</span>
+                <span>配对</span>
+            </div>
+            <div class="nav-item" onclick="showPage('peach')">
+                <span class="icon">🌸</span>
+                <span>桃花</span>
+            </div>
+        </nav>
+    </div>
+
+<script>
+'use strict';
+
+// ============ 常量配置 ============
+const CONFIG = {
+    TIANGAN: Object.freeze(['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']),
+    DIZHI: Object.freeze(['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']),
+    SHENGXIAO: Object.freeze(['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪']),
+    WUXING: Object.freeze(['金', '木', '水', '火', '土']),
+    LUNAR_MONTHS: Object.freeze(['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '冬月', '腊月']),
+    LUNAR_DAYS: Object.freeze(['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+                      '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+                      '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十']),
+    WEEKDAYS: Object.freeze(['日', '一', '二', '三', '四', '五', '六']),
+    // 五行生克关系
+    WUXING_SHENG: Object.freeze({木:'火', 火:'土', 土:'金', 金:'水', 水:'木'}),
+    WUXING_KE: Object.freeze({木:'土', 土:'水', 水:'火', 火:'金', 金:'木'}),
+    // 天干五行映射
+    GAN_WUXING: Object.freeze({甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'}),
+    // 地支五行映射
+    ZHI_WUXING: Object.freeze({子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'}),
+    // 五行样式类名
+    WUXING_COLORS: Object.freeze({金:'wuxing-jin', 木:'wuxing-mu', 水:'wuxing-shui', 火:'wuxing-huo', 土:'wuxing-tu'})
+};
+
+// 农历数据
+const LUNAR_DATA = {
+    2024: [[1,30],[2,30],[3,29],[4,30],[5,29],[6,30],[7,29],[8,30],[9,29],[10,30],[11,29],[12,30]],
+    2025: [
+        {month: 1, days: 30, leap: false}, {month: 2, days: 29, leap: false},
+        {month: 3, days: 30, leap: false}, {month: 4, days: 29, leap: false},
+        {month: 5, days: 30, leap: false}, {month: 6, days: 29, leap: false},
+        {month: 6, days: 29, leap: true},  // 闰六月
+        {month: 7, days: 30, leap: false}, {month: 8, days: 29, leap: false},
+        {month: 9, days: 30, leap: false}, {month: 10, days: 30, leap: false},
+        {month: 11, days: 29, leap: false}, {month: 12, days: 30, leap: false}
+    ],
+    baseDate2024: new Date(2024, 1, 10),
+    baseDate2025: new Date(2025, 0, 29)
+};
+
+// ============ DOM缓存 ============
+const DOM = {};
+function cacheDOM() {
+    DOM.dateInfo = document.getElementById('dateInfo');
+    DOM.birthYear = document.getElementById('birthYear');
+    DOM.birthMonth = document.getElementById('birthMonth');
+    DOM.birthDay = document.getElementById('birthDay');
+    DOM.birthHour = document.getElementById('birthHour');
+    DOM.maleZodiac = document.getElementById('maleZodiac');
+    DOM.femaleZodiac = document.getElementById('femaleZodiac');
+    DOM.eventType = document.getElementById('eventType');
+    DOM.fortuneResult = document.getElementById('fortuneResult');
+    DOM.auspiciousResult = document.getElementById('auspiciousResult');
+    DOM.almanacContent = document.getElementById('almanacContent');
+    DOM.matchResult = document.getElementById('matchResult');
+    DOM.peachYear = document.getElementById('peachYear');
+    DOM.peachMonth = document.getElementById('peachMonth');
+    DOM.peachDay = document.getElementById('peachDay');
+    DOM.peachGender = document.getElementById('peachGender');
+    DOM.peachResult = document.getElementById('peachResult');
+    DOM.pages = document.querySelectorAll('.page');
+    DOM.navItems = document.querySelectorAll('.nav-item');
+}
+
+// ============ 每日信息（基于传统命理学计算，确保各板块一致） ============
+const DailyInfo = {
+    _cache: null,
+    _cacheDate: null,
+    
+    // 地支六冲关系：子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲
+    // 索引对应：0-子 1-丑 2-寅 3-卯 4-辰 5-巳 6-午 7-未 8-申 9-酉 10-戌 11-亥
+    CHONG_MAP: [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], // 日支索引 -> 冲的地支索引
+    
+    // 煎方规则：申子辰日煎南、亥卯未日煎西、寅午戌日煎北、巳酉丑日煎东
+    SHA_MAP: {
+        0: '南', 4: '南', 8: '南',   // 子、辰、申日煎南
+        3: '西', 7: '西', 11: '西',  // 卯、未、亥日煎西
+        2: '北', 6: '北', 10: '北',  // 寅、午、戌日煎北
+        1: '东', 5: '东', 9: '东'    // 丑、巳、酉日煎东
+    },
+    
+    // 计算某日的日干支（基准2024年1月1日为甲辰日推算）
+    getDayGanZhi(date) {
+        // 基准日：2024年1月1日是甲辰日（天干索引0，地支索引4）
+        const baseDate = new Date(2024, 0, 1);
+        const baseGanIdx = 0;  // 甲
+        const baseZhiIdx = 4;  // 辰
+        
+        // 计算与基准日的天数差
+        const diffDays = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // 干支循环
+        const ganIdx = ((baseGanIdx + diffDays) % 10 + 10) % 10;
+        const zhiIdx = ((baseZhiIdx + diffDays) % 12 + 12) % 12;
+        
+        return {
+            gan: CONFIG.TIANGAN[ganIdx],
+            zhi: CONFIG.DIZHI[zhiIdx],
+            ganIdx: ganIdx,
+            zhiIdx: zhiIdx
+        };
+    },
+    
+    // 计算吉神（基于月份和日干）
+    getJiShen(date, ganIdx) {
+        const month = date.getMonth() + 1;
+        // 天德：正七庚、二八辛、三九壬、四十癸、五十一甲、六十二丙
+        const tianDeGan = [6, 7, 8, 9, 0, 2, 6, 7, 8, 9, 0, 2]; // 各月天德对应的天干索引
+        const yueDeGan = [8, 0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0];  // 各月月德对应的天干索引
+        
+        const jiShenList = [];
+        if (ganIdx === tianDeGan[month - 1]) jiShenList.push('天德');
+        if (ganIdx === yueDeGan[month - 1]) jiShenList.push('月德');
+        if (jiShenList.length === 0) {
+            // 其他吉神简化计算
+            const otherJiShen = ['天恩', '福星', '文昌', '驿马', '天喜', '玉堂'];
+            jiShenList.push(otherJiShen[(ganIdx + month) % otherJiShen.length]);
+        }
+        return jiShenList.join('、');
+    },
+    
+    // 计算凶神（基于日支）
+    getXiongShen(zhiIdx) {
+        // 凶神与日支相关，简化计算
+        const xiongShenList = ['五鬼', '死气', '白虎', '天刑', '朱雀', '天狗'];
+        return xiongShenList[zhiIdx % xiongShenList.length];
+    },
+    
+    get() {
+        const today = new Date();
+        const dateKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        
+        // 缓存当天数据，避免重复计算
+        if (this._cacheDate === dateKey && this._cache) {
+            return this._cache;
+        }
+        
+        // 计算今日干支
+        const dayGZ = this.getDayGanZhi(today);
+        
+        // 根据日支计算冲的生肖（地支六冲）
+        const chongZhiIdx = this.CHONG_MAP[dayGZ.zhiIdx];
+        const chongSx = CONFIG.SHENGXIAO[chongZhiIdx];
+        
+        // 根据日支计算煎方
+        const shaDir = this.SHA_MAP[dayGZ.zhiIdx];
+        
+        // 计算吉神
+        const jiShen = this.getJiShen(today, dayGZ.ganIdx);
+        
+        // 计算凶神
+        const xiongShen = this.getXiongShen(dayGZ.zhiIdx);
+        
+        this._cache = {
+            dayGan: dayGZ.gan,
+            dayZhi: dayGZ.zhi,
+            chongSx: chongSx,
+            chongZhi: CONFIG.DIZHI[chongZhiIdx],
+            shaDir: shaDir,
+            jiShen: jiShen,
+            xiongShen: xiongShen
+        };
+        this._cacheDate = dateKey;
+        
+        return this._cache;
+    }
+};
+
+// ============ 工具函数 ============
+const Utils = {
+    // 基于种子的确定性随机数生成（保证同样输入同样输出）
+    seededRandom(seed) {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    },
+    
+    // 确定性整数（基于种子）
+    deterministicInt(seed, min, max) {
+        return min + Math.floor(this.seededRandom(seed) * (max - min + 1));
+    },
+    
+    // 确定性打乱数组并取前n个（基于种子）
+    deterministicSlice(arr, n, seed) {
+        const indexed = arr.map((item, i) => ({ item, sort: this.seededRandom(seed + i) }));
+        indexed.sort((a, b) => a.sort - b.sort);
+        return indexed.slice(0, n).map(x => x.item);
+    },
+    
+    // 计算日期差（天数）
+    daysBetween(date1, date2) {
+        return Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
+    },
+    // 添加天数到日期
+    addDays(date, days) {
+        return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+    },
+    // 安全获取元素值
+    getSelectValue(element, defaultVal = 0) {
+        return element ? parseInt(element.value) || defaultVal : defaultVal;
+    },
+    // 填充选择框选项
+    populateSelect(element, options, valueKey, textKey) {
+        if (!element) return;
+        const fragment = document.createDocumentFragment();
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = valueKey ? opt[valueKey] : opt;
+            option.textContent = textKey ? opt[textKey] : opt;
+            fragment.appendChild(option);
+        });
+        element.appendChild(fragment);
+    },
+    // 获取日期种子（用于当日确定性计算）
+    getDateSeed(date) {
+        return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    }
+};
+
+// ============ 农历计算模块 ============
+const LunarCalendar = {
+    // 获取农历日期
+    getDate(date) {
+        const year = date.getFullYear();
+        if (year === 2025) {
+            const offset = Utils.daysBetween(date, LUNAR_DATA.baseDate2025);
+            if (offset < 0) return this.getDate2024(date);
+            return this._calculateLunar(offset, LUNAR_DATA[2025]);
+        }
+        if (year === 2024) return this.getDate2024(date);
+        return this._getGeneral(date);
+    },
+    
+    // 2024年农历计算
+    getDate2024(date) {
+        const offset = Utils.daysBetween(date, LUNAR_DATA.baseDate2024);
+        if (offset < 0) return this._getGeneral(date);
+        
+        let dayCount = 0;
+        for (const [m, d] of LUNAR_DATA[2024]) {
+            if (offset < dayCount + d) {
+                return CONFIG.LUNAR_MONTHS[m-1] + CONFIG.LUNAR_DAYS[offset - dayCount];
+            }
+            dayCount += d;
+        }
+        return this._getGeneral(date);
+    },
+    
+    // 2025年农历计算（包含闰月）
+    _calculateLunar(offset, lunarData) {
+        let dayCount = 0;
+        for (let i = 0; i < lunarData.length; i++) {
+            if (offset < dayCount + lunarData[i].days) {
+                const lunarDay = offset - dayCount + 1;
+                let monthStr = CONFIG.LUNAR_MONTHS[lunarData[i].month - 1];
+                if (lunarData[i].leap) monthStr = '闰' + monthStr;
+                return monthStr + CONFIG.LUNAR_DAYS[lunarDay - 1];
+            }
+            dayCount += lunarData[i].days;
+        }
+        return CONFIG.LUNAR_MONTHS[0] + CONFIG.LUNAR_DAYS[0];
+    },
+    
+    // 通用农历计算（近似值）
+    _getGeneral(date) {
+        const m = (date.getMonth() + 11) % 12;
+        const d = (date.getDate() + 18) % 30;
+        return CONFIG.LUNAR_MONTHS[m] + CONFIG.LUNAR_DAYS[d];
+    }
+};
+
+// 兼容旧函数名
+function getLunarDate(date) { return LunarCalendar.getDate(date); }
+
+// ============ 页面导航模块 ============
+const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4, peach:5});
+
+function showPage(page) {
+    // 使用缓存的DOM元素
+    DOM.pages.forEach(p => p.classList.remove('active'));
+    DOM.navItems.forEach(n => n.classList.remove('active'));
+    
+    const pageEl = document.getElementById('page-' + page);
+    if (pageEl) pageEl.classList.add('active');
+    
+    if (NAV_INDEX[page] !== undefined) {
+        DOM.navItems[NAV_INDEX[page]]?.classList.add('active');
+    }
+    
+    // 页面加载回调
+    const pageCallbacks = {
+        almanac: showAlmanac,
+        auspicious: searchAuspicious
+    };
+    pageCallbacks[page]?.();
+}
+
+// ============ 初始化模块 ============
+function init() {
+    // 缓存DOM元素
+    cacheDOM();
+    
+    // 显示当前日期信息
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 周${CONFIG.WEEKDAYS[now.getDay()]}`;
+    const lunar = getLunarDate(now);
+    DOM.dateInfo.innerHTML = `📅 ${dateStr} │ 🌙 ${lunar}`;
+    
+    // 初始化生辰选择框
+    initBirthSelectors();
+    
+    // 初始化生肖选择框
+    initZodiacSelectors();
+    
+    // 初始化桃花运选择框
+    initPeachSelectors();
+}
+
+function initBirthSelectors() {
+    // 年份选择框
+    const years = Array.from({length: 85}, (_, i) => 2024 - i);
+    Utils.populateSelect(DOM.birthYear, years);
+    DOM.birthYear.value = '1990';
+    
+    // 月份选择框
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.birthMonth, months);
+    
+    // 日期选择框
+    const days = Array.from({length: 31}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.birthDay, days);
+    
+    // 小时选择框
+    const hours = Array.from({length: 24}, (_, i) => i);
+    Utils.populateSelect(DOM.birthHour, hours);
+    DOM.birthHour.value = '12';
+}
+
+function initZodiacSelectors() {
+    Utils.populateSelect(DOM.maleZodiac, CONFIG.SHENGXIAO);
+    Utils.populateSelect(DOM.femaleZodiac, CONFIG.SHENGXIAO);
+    DOM.maleZodiac.value = '龙';
+    DOM.femaleZodiac.value = '兔';
+}
+
+// 初始化桃花运选择框
+function initPeachSelectors() {
+    const years = Array.from({length: 85}, (_, i) => 2024 - i);
+    Utils.populateSelect(DOM.peachYear, years);
+    DOM.peachYear.value = '1990';
+    
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.peachMonth, months);
+    DOM.peachMonth.value = '6';
+    
+    const days = Array.from({length: 31}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.peachDay, days);
+    DOM.peachDay.value = '15';
+}
+
+// ============ 八字计算模块 ============
+const BaziCalculator = {
+    // 计算八字
+    calculate(year, month, day, hour) {
+        const yearGan = CONFIG.TIANGAN[(year - 4) % 10];
+        const yearZhi = CONFIG.DIZHI[(year - 4) % 12];
+        const sx = CONFIG.SHENGXIAO[(year - 4) % 12];
+        
+        const monthGan = CONFIG.TIANGAN[(year * 12 + month + 3) % 10];
+        const monthZhi = CONFIG.DIZHI[(month + 1) % 12];
+        
+        const dayGan = CONFIG.TIANGAN[(year * 365 + month * 30 + day) % 10];
+        const dayZhi = CONFIG.DIZHI[(year * 365 + month * 30 + day) % 12];
+        
+        const hourZhiIdx = Math.floor((hour + 1) / 2) % 12;
+        const hourGan = CONFIG.TIANGAN[(CONFIG.TIANGAN.indexOf(dayGan) * 2 + hourZhiIdx) % 10];
+        const hourZhi = CONFIG.DIZHI[hourZhiIdx];
+        
+        return { yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi, sx };
+    },
+    
+    // 计算五行分布
+    calculateWuxing(bazi) {
+        const {yearGan, monthGan, dayGan, hourGan, yearZhi, monthZhi, dayZhi, hourZhi} = bazi;
+        const wxCount = {金:0, 木:0, 水:0, 火:0, 土:0};
+        
+        [yearGan, monthGan, dayGan, hourGan].forEach(g => wxCount[CONFIG.GAN_WUXING[g]]++);
+        [yearZhi, monthZhi, dayZhi, hourZhi].forEach(z => wxCount[CONFIG.ZHI_WUXING[z]]++);
+        
+        return wxCount;
+    },
+    
+    // 分析日主强弱和喜忌神
+    analyzeStrength(dayGan, wxCount) {
+        const dayWx = CONFIG.GAN_WUXING[dayGan];
+        const shengWo = Object.keys(CONFIG.WUXING_SHENG).find(k => CONFIG.WUXING_SHENG[k] === dayWx);
+        const woSheng = CONFIG.WUXING_SHENG[dayWx];
+        const keWo = Object.keys(CONFIG.WUXING_KE).find(k => CONFIG.WUXING_KE[k] === dayWx);
+        const woKe = CONFIG.WUXING_KE[dayWx];
+        
+        const helpCount = wxCount[dayWx] + wxCount[shengWo];
+        const drainCount = wxCount[woSheng] + wxCount[woKe] + wxCount[keWo];
+        const isStrong = helpCount >= drainCount;
+        
+        const xiShen = isStrong ? [woSheng, woKe] : [dayWx, shengWo];
+        const jiShen = isStrong ? [dayWx, shengWo] : [woSheng, woKe];
+        
+        return { dayWx, isStrong, xiShen, jiShen, shengWo, woSheng, keWo, woKe };
+    },
+    
+    // 获取格局（基于八字确定性计算）
+    getGeju(bazi) {
+        const gejuList = ['正印格','偏印格','食神格','伤官格','正财格','偏财格','正官格','七杀格'];
+        // 基于日柱干支确定格局
+        const seed = CONFIG.TIANGAN.indexOf(bazi.dayGan) * 12 + CONFIG.DIZHI.indexOf(bazi.dayZhi);
+        return gejuList[seed % gejuList.length];
+    }
+};
+
+// ============ 命理解读数据 ============
+function getLifeReadings(dayWx, isStrong) {
+    const lifeReadings = {
+        '木': {
+            true: [
+                '【综合命运】日主甲木身旺，如参天大树，生命力旺盛。一生性格刚正不阿，有领导才能，适合担任管理者角色。',
+                '【少年运势】（1-25岁）少年时期学业顺利，聪明好学，但性格较为倒强，需注意与人相处的方式方法。',
+                '【中年运势】（26-50岁）中年事业有成，财运亨通，但木旺克土，需注意婚姻家庭的经营，避免因事业而忽视家人。',
+                '【晚年运势】（51岁后）晚年安康，子孙孝顺，可享天伦之乐。注意肝胆保养，适当运动。'
+            ],
+            false: [
+                '【综合命运】日主甲木身弱，如幼苗需水木滋养。一生性格温和，善于合作，适合团队工作，借助贵人之力发展。',
+                '【少年运势】（1-25岁）少年时期可能较为艰苦，需要努力学习，多依靠父母帮助。',
+                '【中年运势】（26-50岁）中年运势渐入佳境，遇贵人相助，事业有成。婚姻缘分来得稍晚，但质量高。',
+                '【晚年运势】（51岁后）晚年子孙孝顺，大器晚成，可享清福。注意肝胆、筋骨保养。'
+            ]
+        },
+        '火': {
+            true: [
+                '【综合命运】日主丙火身旺，如日中天，光明磊落，热情开朗。具有领袖气质，事业心强，年轻时即有成就。',
+                '【少年运势】（1-25岁）少年时期活泼好动，学业表现突出，但性格急躁，需修身养性。',
+                '【中年运势】（26-50岁）中年事业达高峰，名利双收。但火旺则燥，需水来济，宜多与水型人合作。',
+                '【晚年运势】（51岁后）晚年子孙有出息，家庭和睦。注意心血管保养，忌暴躁。'
+            ],
+            false: [
+                '【综合命运】日主丙火身弱，如烛火微弱，需木来生扶。性格温和，善于交际，人缘极佳。',
+                '【少年运势】（1-25岁）少年时期需贵人提携，依靠家庭扶持，学业平稳。',
+                '【中年运势】（26-50岁）中年运势渐佳，适合公关、销售类工作。财运平稳，不宜冒险投资。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意心脏、血压保养。'
+            ]
+        },
+        '土': {
+            true: [
+                '【综合命运】日主戊土身旺，如山岳稳重，诚实守信，有担当。但过于固执，需注意灵活变通。',
+                '【少年运势】（1-25岁）少年时期性格踏实，学业稳定，但不够灵活，需多拓展视野。',
+                '【中年运势】（26-50岁）中年事业稳定，适合政府、国企、教育等行业。财运稳健，积蓄渐丰。',
+                '【晚年运势】（51岁后）晚年安稳，子孙孝顺，家业兴旺。注意脾胃保养。'
+            ],
+            false: [
+                '【综合命运】日主戊土身弱，如田园乏水，需火土生扶。性格随和，包容性强，人缘好。',
+                '【少年运势】（1-25岁）少年时期需依靠家庭，学业较为平常，但能吃苦耐劳。',
+                '【中年运势】（26-50岁）中年后运势渐入佳境，大器晚成。适合稳定的工作环境。',
+                '【晚年运势】（51岁后）晚年福泽深厚，子孙满堂，家庄和睦。注意肠胃保养。'
+            ]
+        },
+        '金': {
+            true: [
+                '【综合命运】日主庚金身旺，如刃剑出鞘，果断刚毅。适合武职、法律、金融等行业。',
+                '【少年运势】（1-25岁）少年时期性格要强，学业表现突出，但需注意人际关系。',
+                '【中年运势】（26-50岁）中年事业有成，正财运佳。但金旺克木太过，宜注意家庭和谐。',
+                '【晚年运势】（51岁后）晚年安康，子孙孝顺。注意肺部、呼吸系统保养。'
+            ],
+            false: [
+                '【综合命运】日主庚金身弱，如饰品小巧，需土金生扶。心思细密，善于策划，适合幕后工作。',
+                '【少年运势】（1-25岁）少年时期需依靠家庭扶持，学业平稳，善于思考。',
+                '【中年运势】（26-50岁）中年运势渐佳，适合技术、管理岗位。财运需耐心经营，稳中求进。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭和睦。注意肺部、皮肤保养。'
+            ]
+        },
+        '水': {
+            true: [
+                '【综合命运】日主壬水身旺，如江河汹涌，智慧过人，变通能力强。适合研究、写作、咨询等智力工作。',
+                '【少年运势】（1-25岁）少年时期聪明过人，学业优异，但思绪不定，需专注。',
+                '【中年运势】（26-50岁）中年事业有成，有海外发展运。但水旺则泛，需土来制，宜与土型人合作。',
+                '【晚年运势】（51岁后）晚年智慧不减，可发挥余热。注意肾脏、泰尿系统保养。'
+            ],
+            false: [
+                '【综合命运】日主壬水身弱，如源头细流，需金水生扶。性格温顺，适应力强，人缘好。',
+                '【少年运势】（1-25岁）少年时期需家庭扶持，学业平稳，但善于适应环境。',
+                '【中年运势】（26-50岁）中年运势渐佳，需贵人提携，合作经营为佳。婚姻和美。',
+                '【晚年运势】（51岁后）晚年子孙缘深，家庭幸福。注意肾脏、注意保暖。'
+            ]
+        }
+    };
+    return lifeReadings[dayWx] ? lifeReadings[dayWx][isStrong] : lifeReadings['木'][true];
+}
+
+function calculateFortune() {
+    const year = Utils.getSelectValue(DOM.birthYear);
+    const month = Utils.getSelectValue(DOM.birthMonth);
+    const day = Utils.getSelectValue(DOM.birthDay);
+    const hour = Utils.getSelectValue(DOM.birthHour);
+    
+    // 使用八字计算模块
+    const bazi = BaziCalculator.calculate(year, month, day, hour);
+    const {yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi, sx} = bazi;
+    
+    const wxCount = BaziCalculator.calculateWuxing(bazi);
+    const analysis = BaziCalculator.analyzeStrength(dayGan, wxCount);
+    const {dayWx, isStrong, xiShen, jiShen} = analysis;
+    const geju = BaziCalculator.getGeju(bazi);
+    
+    // 命理解读
+    const readings = {
+        木: {true: ['日主甲木身旺，如参天大树，刚正不阿，领导力强。','木旺喜金来雕琢，方能成器，宜从事纪律性强的工作。','财运方面，中年后财库渐丰。'],
+             false: ['日主甲木身弱，如幼苗无依，需得水木生扶。','适合团队合作，借助贵人之力发展。','婚姻缘分来得较晚，但质量高。']},
+        火: {true: ['日主丙火身旺，如日中天，光明磊落，有领袖气质。','火旺则燥，需水来济，宜修身养性。','事业运佳，年轻时即有成就。'],
+             false: ['日主丙火身弱，如烛火微弱，需木来生扶。','性格温和，善于交际，人缘极佳。','财运平稳，不宜冒险投资。']},
+        土: {true: ['日主戊土身旺，如山岳稳重，诚实守信，有担当。','土旺喜木来疏，否则过于保守。','适合稳定的工作环境。'],
+             false: ['日主戊土身弱，如田园乏水，需火土生扶。','性格随和，包容性强，人缘好。','中年后运势渐入佳境，大器晚成。']},
+        金: {true: ['日主庚金身旺，如刃剑出鞘，果断刚毅。','金旺克木太过，宜注意人际关系。','武职、法律、金融行业发展佳。'],
+             false: ['日主庚金身弱，如饰品小巧，需土金生扶。','心思细密，善于策划，适合幕后工作。','财运需耐心经营，稳中求进。']},
+        水: {true: ['日主壬水身旺，如江河汹涌，智慧过人。','水旺则泛，需土来制，否则思绪不定。','适合智力工作，有海外发展运。'],
+             false: ['日主壬水身弱，如源头细流，需金水生扶。','性格温顺，适应力强，婚姻和美。','财运需贵人提携，合作经营为佳。']}
+    };
+    const myReadings = readings[dayWx] ? readings[dayWx][isStrong] : readings['木'][true];
+    
+    // 流年运势
+    const curYear = new Date().getFullYear();
+    const yearGz = CONFIG.TIANGAN[(curYear-4)%10] + CONFIG.DIZHI[(curYear-4)%12] + '年';
+    const yearWx = CONFIG.GAN_WUXING[CONFIG.TIANGAN[(curYear-4)%10]];
+    let yearLuck = '平常', luckColor = 'var(--orange)';
+    let yearSummary, yearDetails;
+    if (xiShen.includes(yearWx)) {
+        yearLuck = '大吉';
+        luckColor = 'var(--gold)';
+        yearSummary = '流年为喜用神，诸事顺遂，可积极进取。';
+        yearDetails = [
+            '💰 财运：财运亨通，正财偏财皆有机会，可适当投资理财，但不宜贪心。',
+            '🏢 事业：工作顺利，有贵人相助，适合拓展业务或谋求晋升。',
+            '💗 感情：单身者有望遇良缘，已婚者感情和睦，家庭美满。',
+            '🎯 健康：身体状况良好，但仍需注意作息规律，勿过度劳累。'
+        ];
+    } else if (yearWx === dayWx) {
+        yearLuck = '平稳';
+        luckColor = 'var(--green)';
+        yearSummary = '流年与日主同元，运势平稳，宜守不宜攻。';
+        yearDetails = [
+            '💰 财运：收入稳定，正财为主，不宜投机冒险，稳健理财为宜。',
+            '🏢 事业：工作按部就班，不宜贸然跳槽或创业，守住本职为上。',
+            '💗 感情：感情平淡，需用心经营，多与伴侣沟通交流。',
+            '🎯 健康：注意肠胃保养，饮食宜清淡，保持适当运动。'
+        ];
+    } else {
+        yearLuck = '平常';
+        luckColor = 'var(--orange)';
+        yearSummary = '流年与命局有冲，宜谨慎行事，避免重大决策。';
+        yearDetails = [
+            '💰 财运：财运波动，忌贪忌投机，守住现有钱财，勿轻信他人。',
+            '🏢 事业：工作中可能遇到小人或阻碍，宜低调做事，不争风头。',
+            '💗 感情：感情易有波折，多包容理解，避免争吵。',
+            '🎯 健康：注意安全，谨防意外，定期体检，预防为主。'
+        ];
+    }
+    
+    // 渲染结果
+    const wxColors = CONFIG.WUXING_COLORS;
+    
+    let html = `
+        <div class="card">
+            <div class="card-title">📿 命理分析报告</div>
+            <div style="text-align:center; margin-bottom:10px;">
+                <span style="color:var(--purple-light)">🐲 ${sx}年生人</span>
+                <span style="margin-left:15px; color:var(--gold-dark)">${geju}</span>
+            </div>
+            
+            <div class="card-title">① 八字命盘</div>
+            <div class="bazi-row">
+                <div class="bazi-col"><div class="label">年柱</div><div class="value">${yearGan}${yearZhi}</div></div>
+                <div class="bazi-col"><div class="label">月柱</div><div class="value">${monthGan}${monthZhi}</div></div>
+                <div class="bazi-col"><div class="label">日柱</div><div class="value">${dayGan}${dayZhi}</div></div>
+                <div class="bazi-col"><div class="label">时柱</div><div class="value">${hourGan}${hourZhi}</div></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">② 五行分布</div>
+            <div class="wuxing-tags">
+                ${Object.entries(wxCount).map(([wx,c]) => {
+                    const status = c >= 3 ? '旺' : c >= 1 ? '平' : '弱';
+                    return `<span class="wuxing-tag ${wxColors[wx]}">${wx}:${c}${status}</span>`;
+                }).join('')}
+            </div>
+            <div style="text-align:center; margin-top:10px;">
+                <span>日主：${dayGan}${dayWx}</span>
+                <span style="margin-left:15px; color:${isStrong?'var(--green)':'var(--orange)'}; font-weight:bold;">
+                    ${isStrong ? '身旺' : '身弱'}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">③ 喜用神与忌神</div>
+            <div style="display:flex; gap:20px; justify-content:center;">
+                <div>✅ 喜用：${xiShen.map(x => `<span class="wuxing-tag ${wxColors[x]}">${x}</span>`).join(' ')}</div>
+                <div>❌ 忌神：${jiShen.map(x => `<span class="wuxing-tag ${wxColors[x]}">${x}</span>`).join(' ')}</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">④ 命理综合解读</div>
+            ${myReadings.map(r => `<div class="reading-item">● ${r}</div>`).join('')}
+        </div>
+        
+        <div class="card">
+            <div class="card-title">⑤ 流年运势分析</div>
+            <div style="text-align:center;">
+                <div style="font-size:1.1rem;">📅 ${yearGz}（${yearWx}）：<span style="color:${luckColor}; font-weight:bold;">${yearLuck}</span></div>
+                <div style="font-size:0.9rem; color:var(--text-dim); margin:8px 0;">${yearSummary}</div>
+            </div>
+            <div style="text-align:left; padding:10px 5px;">
+                ${yearDetails.map(d => `<div style="padding:5px 0; font-size:0.85rem;">● ${d}</div>`).join('')}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">⑥ 一生命运概述</div>
+            <div style="font-size:0.85rem; color:var(--purple-light); padding:5px 0;">您的日主为${dayGan}（属${dayWx}），${isStrong ? '身旺' : '身弱'}，喜用神为${xiShen.join('、')}，忌神为${jiShen.join('、')}。</div>
+            ${getLifeReadings(dayWx, isStrong).map(r => `<div class="reading-item">● ${r}</div>`).join('')}
+            <div style="font-size:0.8rem; color:var(--text-dim); margin-top:10px;">📚 命理依据：本分析基于《渊海子平》《三命通会》《子平真诠》等古典命理典籍，结合日主五行旺衰、喜忌神等因素综合分析。</div>
+        </div>
+        
+        <div class="hint-text">✨ 命由天定，运由己造，以上仅供参考 ✨</div>
+    `;
+    
+    DOM.fortuneResult.innerHTML = html;
+}
+
+// ============ 黄道吉日查询 ============
+function searchAuspicious() {
+    const event = DOM.eventType?.value || '结婚嫁娶';
+    const now = new Date();
+    const baseSeed = Utils.getDateSeed(now);
+    
+    // 事项类型索引（用于确定性计算）
+    const eventTypes = ['结婚嫁娶', '搬家入宅', '开业开张', '出行远行', '签约交易'];
+    const eventIdx = eventTypes.indexOf(event) >= 0 ? eventTypes.indexOf(event) : 0;
+    
+    let html = `<div class="card"><div class="card-title">📅 近期「${event}」吉日</div>`;
+    
+    for (let i = 0; i < 10; i++) {
+        // 基于日期、事项和序号确定性计算天数
+        const seed = baseSeed + eventIdx * 100 + i * 7;
+        const daysAdd = 3 + i * 7 + Utils.deterministicInt(seed, 0, 4);
+        const luckyDate = Utils.addDays(now, daysAdd);
+        const dateStr = `${luckyDate.getMonth()+1}月${luckyDate.getDate()}日 周${CONFIG.WEEKDAYS[luckyDate.getDay()]}`;
+        const lunar = getLunarDate(luckyDate);
+        const levels = ['★★★★★ 大吉', '★★★★☆ 上吉', '★★★☆☆ 中吉'];
+        const level = levels[Utils.deterministicInt(seed + 1000, 0, 2)];
+        
+        html += `
+            <div class="lucky-day-item">
+                <div>
+                    <div class="date">📆 ${dateStr}</div>
+                    <div class="lunar">${lunar}</div>
+                </div>
+                <div class="level">${level}</div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    DOM.auspiciousResult.innerHTML = html;
+}
+
+// ============ 老黄历 ============
+const YI_EXPLANATIONS = {
+    '嫁娶': '【嫁娶】今日适合举办婚礼、订婚、提亲等喜事。选择此日成婚，夫妻和睦，白头偕老。',
+    '祭祀': '【祭祀】今日适合祭拜神明、祖先、上香进贡。诚心祭拜，可保家宅平安。',
+    '出行': '【出行】今日适合外出、旅游、出差、探亲访友。路途平安顺利。',
+    '开市': '【开市】今日适合店铺开业、公司开张。选此日开业，财源广进。',
+    '纳财': '【纳财】今日适合收取钱财、结算账款。财运亨通，进财顺利。',
+    '动土': '【动土】今日适合建房动工、地基开挖。动土大吉，工程顺利。',
+    '安床': '【安床】今日适合安置床铺。床位安定，睡眠安稳，家庭和睦。',
+    '入宅': '【入宅】今日适合搬家入住、乔迁新居。入住新居后家运亨通。',
+    '开光': '【开光】今日适合佛像开光、神位开光、吉祥物品开光。开光后灵气十足。',
+    '修造': '【修造】今日适合房屋修缮、装修改造。工程顺利，质量保证。'
+};
+const JI_EXPLANATIONS = {
+    '诉讼': '【诉讼】今日不宜打官司、起诉。若有纠纷，宜和解为上，否则官司缠身。',
+    '安葬': '【安葬】今日不宜下葬、安放遗骸。宜另择吉日。',
+    '破土': '【破土】今日不宜挖掘土地、墓地动工。恐惊动土神。',
+    '伐木': '【伐木】今日不宜砂伐树木。树木有灵，随意砍伐恐伤元气。',
+    '作灶': '【作灶】今日不宜安装灶台。灶为家中财库，安装不当影响财运。',
+    '掘井': '【掘井】今日不宜挖掘水井。井为生命之源，择日不当恐影响健康。',
+    '栽种': '【栽种】今日不宜种植花草树木。植物难以成活，或生长不旺。'
+};
+const CHONGSHA_EXPLANATIONS = {
+    chong: {鼠:'属鼠者今日与日支相冲，宜静不宜动。',牛:'属牛者今日与日支相冲，宜保守稳重。',虎:'属虎者今日与日支相冲，注意控制情绪。',兔:'属兔者今日与日支相冲，宜低调行事。',龙:'属龙者今日与日支相冲，谨慎为上。',蛇:'属蛇者今日与日支相冲，守住本分。',马:'属马者今日与日支相冲，注意安全。',羊:'属羊者今日与日支相冲，宜守不宜攻。',猴:'属猴者今日与日支相冲，稳健为上。',鸡:'属鸡者今日与日支相冲，宜缓不宜急。',狗:'属狗者今日与日支相冲，避免口舌是非。',猪:'属猪者今日与日支相冲，不宜张扬。'},
+    sha: {东:'煎东方，今日不宜向东方行事或远行。',西:'煎西方，今日不宜向西方行事或远行。',南:'煎南方，今日不宜向南方行事或远行。',北:'煎北方，今日不宜向北方行事或远行。'},
+    jiShen: {天德:'【天德】为上吉之神，主福德，诸事皆宜。',月德:'【月德】主贵人相助，办事顺利。',天恩:'【天恩】主上天降福，宜广结善缘。',福星:'【福星】主福禄寿喜，宜办喜事。',文昌:'【文昌】主文运学业，利于考试学习。',驿马:'【驿马】主出行迁徙，利于出差旅游。',天喜:'【天喜】主喜事临门，宜婚嘉庆典。',玉堂:'【玉堂】主贵人健康，宜求医置产。'},
+    xiongShen: {五鬼:'【五鬼】主破财疾病，宜谨慎理财。',死气:'【死气】主不吉，宜避免探病吃丧。',白虎:'【白虎】主血光争斗，谨防意外。',天刑:'【天刑】主刑罚讼争，和气为贵。',朱雀:'【朱雀】主口舌是非，少说多做。',天狗:'【天狗】主小人暗算，谨慎交友。'}
+};
+
+function showAlmanac() {
+    const now = new Date();
+    const dateSeed = Utils.getDateSeed(now);
+    const lunar = getLunarDate(now);
+    const yearGz = CONFIG.TIANGAN[(now.getFullYear()-4)%10] + CONFIG.DIZHI[(now.getFullYear()-4)%12];
+    const sx = CONFIG.SHENGXIAO[(now.getFullYear()-4)%12];
+    
+    // 基于日期确定性选择宜忌
+    const yiList = Utils.deterministicSlice(Object.keys(YI_EXPLANATIONS), 5, dateSeed);
+    const jiList = Utils.deterministicSlice(Object.keys(JI_EXPLANATIONS), 4, dateSeed + 1000);
+    
+    const daily = DailyInfo.get();
+    const chongSx = daily.chongSx;
+    const shaDir = daily.shaDir;
+    const jiShen = daily.jiShen;
+    const xiongShen = daily.xiongShen;
+    
+    const chongExp = CHONGSHA_EXPLANATIONS.chong[chongSx] || '';
+    const shaExp = CHONGSHA_EXPLANATIONS.sha[shaDir] || '';
+    const jiShenExp = CHONGSHA_EXPLANATIONS.jiShen[jiShen.split('、')[0]] || '';
+    const xiongExp = CHONGSHA_EXPLANATIONS.xiongShen[xiongShen] || '';
+    
+    const yiHtml = yiList.map(y => `<div style="background:var(--bg-card);border-radius:8px;padding:10px;margin:5px 0;font-size:0.85rem;">${YI_EXPLANATIONS[y]}</div>`).join('');
+    const jiHtml = jiList.map(j => `<div style="background:var(--bg-card);border-radius:8px;padding:10px;margin:5px 0;font-size:0.85rem;">${JI_EXPLANATIONS[j]}</div>`).join('');
+    
+    DOM.almanacContent.innerHTML = `
+        <div class="almanac-date">
+            <div class="almanac-day">${now.getDate()}</div>
+            <div class="almanac-info">
+                <div class="year">${now.getFullYear()}年${now.getMonth()+1}月</div>
+                <div class="week">星期${CONFIG.WEEKDAYS[now.getDay()]}</div>
+                <div class="lunar">农历 ${lunar}</div>
+                <div class="ganzhi">${yearGz}年【${sx}年】</div>
+            </div>
+        </div>
+        <div class="yiji-box"><span class="yiji-label yi-label">宜</span><span class="yiji-content">${yiList.join('  ')}</span></div>
+        <div class="yiji-box"><span class="yiji-label ji-label">忌</span><span class="yiji-content">${jiList.join('  ')}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;font-size:0.9rem;">
+            <span>⚡ 冲${chongSx}</span><span>🧭 煎${shaDir}</span>
+            <span>🌟 吉神：${jiShen}</span><span style="color:var(--red);">👹 凶神：${xiongShen}</span>
+        </div>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--cyan);">📚 冲煎吉凶详解</div>
+            <div style="background:var(--bg-hover);border-radius:8px;padding:12px;margin:8px 0;font-size:0.85rem;line-height:1.8;">
+                <div style="margin-bottom:6px;"><span style="color:var(--red);font-weight:bold;">⚡ 冲${chongSx}</span>：${chongExp}</div>
+                <div style="margin-bottom:6px;"><span style="color:var(--orange);font-weight:bold;">🧭 煎${shaDir}</span>：${shaExp}</div>
+                <div style="margin-bottom:6px;"><span style="color:var(--green);font-weight:bold;">🌟 吉神</span>：${jiShenExp}</div>
+                <div><span style="color:var(--red);font-weight:bold;">👹 凶神</span>：${xiongExp}</div>
+            </div>
+        </div>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--green);">✅ 今日宜事详解</div>${yiHtml}</div>
+        <div style="margin-top:20px;"><div class="card-title" style="color:var(--red);">❌ 今日忌事详解</div>${jiHtml}</div>
+        <div class="hint-text" style="margin-top:20px;">✨ 顺应天时，趋吉避凶，平安顺遂 ✨</div>
+    `;
+}
+
+// ============ 婚姻配对 ============
+// 生肖配对表（基于传统命理学）
+const ZODIAC_MATCH = {
+    // 三合局：申子辰合水、亥卯未合木、寅午戌合火、巳酉丑合金
+    sanhe: [[0,4,8], [3,7,11], [2,6,10], [1,5,9]], // 索引对应生肖
+    // 六合：子丑、寅亥、卯戌、辰酉、巳申、午未
+    liuhe: [[0,1], [2,11], [3,10], [4,9], [5,8], [6,7]],
+    // 六冲：子午、丑未、寅申、卯酉、辰戌、巳亥
+    liuchong: [[0,6], [1,7], [2,8], [3,9], [4,10], [5,11]],
+    // 六害：子未、丑午、寅巳、卯辰、申亥、酉戌
+    liuhai: [[0,7], [1,6], [2,5], [3,4], [8,11], [9,10]]
+};
+
+function getZodiacScore(male, female) {
+    const mIdx = CONFIG.SHENGXIAO.indexOf(male);
+    const fIdx = CONFIG.SHENGXIAO.indexOf(female);
+    
+    // 检查三合（+25分）
+    let sanheBonus = 0;
+    for (const group of ZODIAC_MATCH.sanhe) {
+        if (group.includes(mIdx) && group.includes(fIdx)) {
+            sanheBonus = 25;
+            break;
+        }
+    }
+    
+    // 检查六合（+20分）
+    let liuheBonus = 0;
+    for (const pair of ZODIAC_MATCH.liuhe) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuheBonus = 20;
+            break;
+        }
+    }
+    
+    // 检查六冲（-20分）
+    let liuchongPenalty = 0;
+    for (const pair of ZODIAC_MATCH.liuchong) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuchongPenalty = -20;
+            break;
+        }
+    }
+    
+    // 检查六害（-10分）
+    let liuhaiPenalty = 0;
+    for (const pair of ZODIAC_MATCH.liuhai) {
+        if ((pair[0] === mIdx && pair[1] === fIdx) || (pair[0] === fIdx && pair[1] === mIdx)) {
+            liuhaiPenalty = -10;
+            break;
+        }
+    }
+    
+    // 基础分70分
+    const baseScore = 70;
+    const totalScore = Math.min(99, Math.max(60, baseScore + sanheBonus + liuheBonus + liuchongPenalty + liuhaiPenalty));
+    
+    return totalScore;
+}
+
+function calculateMatch() {
+    const male = DOM.maleZodiac.value;
+    const female = DOM.femaleZodiac.value;
+    
+    // 基于生肖配对表确定性计算分数
+    const score = getZodiacScore(male, female);
+    
+    let level, color, desc;
+    if (score >= 90) {
+        level = '天作之合'; color = 'var(--gold)';
+        desc = '此乃天赐良缘，二人八字相合，五行互补，婚后必定琴瑟和鸣，白头偕老。';
+    } else if (score >= 80) {
+        level = '上等婚配'; color = 'var(--green)';
+        desc = '二人姻缘不浅，性格互补，相处融洽，携手同行定能共创美好未来。';
+    } else if (score >= 70) {
+        level = '中等婚配'; color = 'var(--purple-light)';
+        desc = '姻缘尚可，需要双方多加包容理解，用心经营方能幸福美满。';
+    } else {
+        level = '需要磨合'; color = 'var(--orange)';
+        desc = '二人性格有所冲突，需要更多沟通与理解，建议婚前多加考虑。';
+    }
+    
+    // 基于生肖索引确定性计算详情
+    const mIdx = CONFIG.SHENGXIAO.indexOf(male);
+    const fIdx = CONFIG.SHENGXIAO.indexOf(female);
+    const detailSeed = mIdx * 12 + fIdx;
+    
+    const details = [
+        ['性格相合度', 70 + Utils.deterministicInt(detailSeed, 0, 24)],
+        ['价值观契合', 65 + Utils.deterministicInt(detailSeed + 100, 0, 29)],
+        ['生活习惯', 60 + Utils.deterministicInt(detailSeed + 200, 0, 34)],
+        ['财运互补', 70 + Utils.deterministicInt(detailSeed + 300, 0, 24)]
+    ];
+    
+    DOM.matchResult.innerHTML = `
+        <div class="card match-result">
+            <div style="font-size:1.3rem; color:var(--gold);">💑 ${male} ❤ ${female}</div>
+            <div class="match-score">${score}</div>
+            <div style="font-size:0.9rem; color:var(--text-dim);">契合指数</div>
+            <div class="match-level" style="color:${color};">${level}</div>
+            <div class="match-desc">${desc}</div>
+        </div>
+        
+        <div class="card">
+            ${details.map(([name, val]) => `
+                <div class="progress-row">
+                    <span class="progress-label">${name}</span>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${val}%"></div></div>
+                    <span class="progress-value">${val}%</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// 启动
+init();
+
+// ============ 桃花运计算模块 ============
+const PeachBlossom = {
+    // 基于年支计算桃花星位置
+    // 桃花星规则：寅午戌年桃花在卯，申子辰年桃花在酉，巳酉丑年桃花在午，亥卯未年桃花在子
+    getPeachBlossomStar(yearZhiIdx) {
+        // 地支索引: 0-子 1-丑 2-寅 3-卯 4-辰 5-巳 6-午 7-未 8-申 9-酉 10-戌 11-亥
+        const peachMap = {
+            2: {idx: 3, zhi: '卯'}, 6: {idx: 3, zhi: '卯'}, 10: {idx: 3, zhi: '卯'},  // 寅午戌年桃花在卯
+            8: {idx: 9, zhi: '酉'}, 0: {idx: 9, zhi: '酉'}, 4: {idx: 9, zhi: '酉'},   // 申子辰年桃花在酉
+            5: {idx: 6, zhi: '午'}, 9: {idx: 6, zhi: '午'}, 1: {idx: 6, zhi: '午'},   // 巳酉丑年桃花在午
+            11: {idx: 0, zhi: '子'}, 3: {idx: 0, zhi: '子'}, 7: {idx: 0, zhi: '子'}   // 亥卯未年桃花在子
+        };
+        return peachMap[yearZhiIdx] || {idx: 3, zhi: '卯'};
+    },
+    
+    // 获取与桃花星相关的地支（六合、三合）
+    getPeachRelatedZhi(peachStarIdx) {
+        // 六合关系
+        const liuheMap = {0:1, 1:0, 2:11, 11:2, 3:10, 10:3, 4:9, 9:4, 5:8, 8:5, 6:7, 7:6};
+        // 三合局
+        const sanheGroups = [[8,0,4], [11,3,7], [2,6,10], [5,9,1]];
+        
+        const related = {liuhe: [], sanhe: []};
+        
+        if (liuheMap[peachStarIdx] !== undefined) {
+            related.liuhe = [liuheMap[peachStarIdx]];
+        }
+        
+        for (const group of sanheGroups) {
+            if (group.includes(peachStarIdx)) {
+                related.sanhe = group.filter(z => z !== peachStarIdx);
+                break;
+            }
+        }
+        
+        return related;
+    },
+    
+    // 确定性计算一生中的桃花运时间段
+    calculatePeachPeriods(birthYear, birthMonth, birthDay, gender, yearZhiIdx, peachStarIdx) {
+        const periods = [];
+        const seed = birthYear * 10000 + birthMonth * 100 + birthDay;
+        const genderFactor = gender === '男' ? 1 : 0;
+        const peachRelated = this.getPeachRelatedZhi(peachStarIdx);
+        const currentYear = new Date().getFullYear();
+        const lifeSpan = 58;  // 分析到58岁
+        
+        for (let age = 18; age <= lifeSpan; age++) {  // 从18岁开始
+            const targetYear = birthYear + age;
+            const yearZhi = (targetYear - 4) % 12;
+            
+            let peachStrength = 0;
+            let peachType = '';
+            
+            // 流年地支正好是桃花星（+40%）
+            if (yearZhi === peachStarIdx) {
+                peachStrength += 40;
+                peachType = '流年桃花';
+            }
+            // 流年地支与桃花星六合（+30%）
+            else if (peachRelated.liuhe.includes(yearZhi)) {
+                peachStrength += 30;
+                peachType = '合桃花';
+            }
+            // 流年地支与桃花星三合（+25%）
+            else if (peachRelated.sanhe.includes(yearZhi)) {
+                peachStrength += 25;
+                peachType = '会桃花';
+            }
+            
+            // 大运影响（10年一运）
+            const dayunIdx = (Math.floor((age - 1) / 10) + genderFactor) % 12;
+            if (dayunIdx === peachStarIdx) {
+                peachStrength += 20;
+            } else if (peachRelated.liuhe.includes(dayunIdx)) {
+                peachStrength += 15;
+            }
+            
+            // 年龄修正
+            if (age >= 18 && age <= 35) {
+                peachStrength += 10;
+            } else if (age >= 36 && age <= 50) {
+                peachStrength += 5;
+            }
+            
+            // 性别修正
+            if (gender === '女' && age >= 25 && age <= 40) {
+                peachStrength += 5;
+            } else if (gender === '男' && age >= 28 && age <= 45) {
+                peachStrength += 5;
+            }
+            
+            // 确定性微调
+            const fineTune = Utils.deterministicInt(seed + age * 7, -5, 5);
+            peachStrength += fineTune;
+            
+            // 确保在合理范围内
+            peachStrength = Math.max(5, Math.min(98, peachStrength));
+            
+            if (peachStrength >= 35) {
+                periods.push({
+                    age: age,
+                    year: targetYear,
+                    strength: peachStrength,
+                    type: peachType || '平常桃花',
+                    isPast: targetYear < currentYear,
+                    isCurrent: targetYear === currentYear
+                });
+            }
+        }
+        
+        return periods;
+    },
+    
+    // 确定性判断桃花质量
+    getPeachQuality(strength, age, gender, seed) {
+        const qualitySeed = seed + strength * 3 + age * 11;
+        
+        let maturityBase;
+        if (age >= 22 && age <= 35) {
+            maturityBase = 70;
+        } else if ((age >= 18 && age < 22) || (age >= 36 && age <= 45)) {
+            maturityBase = 55;
+        } else {
+            maturityBase = 40;
+        }
+        
+        let maturity = maturityBase + Utils.deterministicInt(qualitySeed, -10, 20);
+        maturity = Math.max(20, Math.min(95, maturity));
+        
+        let quality, qualityDesc, qualityColor;
+        if (strength >= 70 && maturity >= 70) {
+            quality = '正缘桃花';
+            qualityDesc = '此桃花为正缘之兆，有望遇到真心人，宜把握机会。';
+            qualityColor = 'var(--green)';
+        } else if (strength >= 60 && maturity >= 55) {
+            quality = '良缘桃花';
+            qualityDesc = '桃花运较旺，感情机会较多，应渗重选择。';
+            qualityColor = 'var(--cyan)';
+        } else if (strength >= 45) {
+            quality = '普通桃花';
+            qualityDesc = '桃花运平平，有异性缘但不明显，须主动争取。';
+            qualityColor = 'var(--gold-dark)';
+        } else {
+            quality = '浅淡桃花';
+            qualityDesc = '桃花运较弱，感情缘分不深，宜修身养性等待时机。';
+            qualityColor = 'var(--text-dim)';
+        }
+        
+        return {quality, qualityDesc, qualityColor, maturity};
+    }
+};
+
+// 桃花星含义
+const PEACH_MEANINGS = {
+    '子': '桃花在子（属鼠）：水地桃花，聪明灵利，异性缘佳，桃花来得早且快，感情世界丰富多彩。',
+    '卯': '桃花在卯（属兔）：木地桃花，温柔文雅，感情细腻，容易吸引异性追求，但需防感情纠葥。',
+    '午': '桃花在午（属马）：火地桃花，热情开朗，魅力四射，感情来得快也旺，但需防感情冲动。',
+    '酉': '桃花在酉（属鸡）：金地桃花，外貌出众，幽雅迷人，桃花质量高，容易遇到优质对象。'
+};
+
+function calculatePeachBlossom() {
+    const year = parseInt(DOM.peachYear.value);
+    const month = parseInt(DOM.peachMonth.value);
+    const day = parseInt(DOM.peachDay.value);
+    const gender = DOM.peachGender.value;
+    
+    if (!year || year < 1940 || year > 2024 || !month || !day) {
+        DOM.peachResult.innerHTML = '<div class="card" style="text-align:center;color:var(--red);">请输入有效的出生日期</div>';
+        return;
+    }
+    
+    // 计算年支和桃花星
+    const yearZhiIdx = (year - 4) % 12;
+    const yearZhi = CONFIG.DIZHI[yearZhiIdx];
+    const shengxiao = CONFIG.SHENGXIAO[yearZhiIdx];
+    const peachStar = PeachBlossom.getPeachBlossomStar(yearZhiIdx);
+    
+    // 计算桃花运时段
+    const periods = PeachBlossom.calculatePeachPeriods(year, month, day, gender, yearZhiIdx, peachStar.idx);
+    
+    // 筛选显著的桃花年份（只显示18-58岁）
+    const filteredPeriods = periods.filter(p => p.age >= 18 && p.age <= 58);
+    let topPeriods = [...filteredPeriods].sort((a, b) => b.strength - a.strength).slice(0, 15);
+    topPeriods = topPeriods.sort((a, b) => a.age - b.age);
+    
+    const seed = year * 10000 + month * 100 + day;
+    const currentYear = new Date().getFullYear();
+    
+    // 生成桃花时间段HTML（包含栏目说明）
+    const headerHtml = `
+        <div style="display:flex;align-items:center;background:var(--bg-card);border-radius:8px;padding:6px 10px;margin-bottom:8px;gap:8px;">
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:110px;">年龄/年份</span>
+            <span style="flex:1;color:var(--text-dim);font-size:0.8rem;font-weight:bold;text-align:center;">强度</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:45px;text-align:center;"></span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:65px;text-align:center;">桃花质量</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:60px;text-align:center;">成熟度</span>
+        </div>
+    `;
+    let periodsHtml = headerHtml + topPeriods.map(p => {
+        const ageText = p.isCurrent ? `${p.age}岁 (${p.year}年) ★当前` : `${p.age}岁 (${p.year}年)`;
+        const ageColor = p.isCurrent ? 'var(--gold)' : (p.isPast ? 'var(--text-dim)' : 'var(--text)');
+        const barColor = p.strength >= 60 ? '#ff69b4' : (p.strength >= 45 ? '#ffc0cb' : '#d3d3d3');
+        const q = PeachBlossom.getPeachQuality(p.strength, p.age, gender, seed);
+        
+        return `
+            <div style="display:flex;align-items:center;background:var(--bg-hover);border-radius:8px;padding:8px 10px;margin:5px 0;gap:8px;">
+                <span style="color:${ageColor};font-size:0.85rem;min-width:110px;">${ageText}</span>
+                <div style="flex:1;height:12px;background:var(--bg-card);border-radius:6px;overflow:hidden;">
+                    <div style="height:100%;width:${p.strength}%;background:${barColor};border-radius:6px;"></div>
+                </div>
+                <span style="color:#ff69b4;font-weight:bold;font-size:0.85rem;min-width:45px;text-align:center;">${p.strength}%</span>
+                <span style="color:${q.qualityColor};font-size:0.8rem;min-width:65px;text-align:center;">${q.quality}</span>
+                <span style="color:var(--text-dim);font-size:0.75rem;min-width:60px;text-align:center;">${q.maturity}%</span>
+            </div>
+        `;
+    }).join('');
+    
+    // 统计桃花运特征（18-58岁范围）
+    const highPeriods = periods.filter(p => p.strength >= 60 && p.age >= 18 && p.age <= 58);
+    const futureHigh = highPeriods.filter(p => !p.isPast);
+    
+    let summaryTexts = [];
+    if (highPeriods.length >= 5) {
+        summaryTexts.push(`● 您一生桃花运较旺，共有${highPeriods.length}个显著桃花年，异性缘分较好。`);
+    } else if (highPeriods.length >= 2) {
+        summaryTexts.push(`● 您一生桃花运中等，共有${highPeriods.length}个显著桃花年，需把握重要时机。`);
+    } else {
+        summaryTexts.push('● 您一生桃花运较淡，异性缘需主动争取，不宜坐等。');
+    }
+    
+    if (futureHigh.length > 0) {
+        const nextPeak = futureHigh.reduce((a, b) => a.year < b.year ? a : b);
+        summaryTexts.push(`● 您未来最近的桃花旺年在${nextPeak.year}年（${nextPeak.age}岁），强度${nextPeak.strength}%。`);
+    }
+    
+    if (gender === '男') {
+        summaryTexts.push('● 男命桃花旺时，容易遇到心仪对象，但需防烂桃花影响家庭和睦。');
+    } else {
+        summaryTexts.push('● 女命桃花旺时，容易被追求，但需明辨真心，防止被花言巧语迷惑。');
+    }
+    
+    const meaning = PEACH_MEANINGS[peachStar.zhi] || '桃花星特质独特，异性缘丰富。';
+    
+    DOM.peachResult.innerHTML = `
+        <div class="card">
+            <div class="card-title" style="color:#ff69b4;">🌸 桃花运分析报告</div>
+            
+            <div style="background:var(--bg-hover);border-radius:8px;padding:12px;margin:10px 0;">
+                <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                    <span>🐲 ${shengxiao}年生</span>
+                    <span>年支：${yearZhi}</span>
+                    <span>${gender}性</span>
+                    <span style="color:#ff69b4;font-weight:bold;">🌸 桃花星：${peachStar.zhi}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">桃花星解读</div>
+            <div style="font-size:0.9rem;padding:5px 0;">● ${meaning}</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">一生桃花运时间段（18-58岁）</div>
+            ${periodsHtml}
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">桃花运综述</div>
+            ${summaryTexts.map(t => `<div style="font-size:0.9rem;padding:5px 0;">${t}</div>`).join('')}
+            <div style="font-size:0.8rem;color:var(--text-dim);margin-top:10px;">📚 命理依据：本分析基于《三命通会》桃花星理论，结合年支、流年、大运等因素综合分析。</div>
+        </div>
+        
+        <div class="hint-text">✨ 桃花开时，缘分自来，以上仅供参考 ✨</div>
+    `;
+}
+</script>
+</body>
+</html>
