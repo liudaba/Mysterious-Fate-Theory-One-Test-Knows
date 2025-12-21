@@ -333,6 +333,11 @@
                         <div class="title">婚姻配对</div>
                         <div class="desc">生肖姻缘测算</div>
                     </div>
+                    <div class="feature-card" onclick="showPage('peach')">
+                        <div class="icon">🌸</div>
+                        <div class="title">桃花运</div>
+                        <div class="desc">姻缘时机预测</div>
+                    </div>
                 </div>
             </div>
             
@@ -393,6 +398,28 @@
                 </div>
                 <div id="matchResult"></div>
             </div>
+            
+            <!-- 桃花运 -->
+            <div id="page-peach" class="page">
+                <div class="card">
+                    <div class="card-title">🌸 桃花运测算</div>
+                    <div class="input-group">
+                        <label>出生日期：</label>
+                        <select id="peachYear"></select><span>年</span>
+                        <select id="peachMonth"></select><span>月</span>
+                        <select id="peachDay"></select><span>日</span>
+                    </div>
+                    <div class="input-group">
+                        <label>性别：</label>
+                        <select id="peachGender">
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <button class="btn" style="background:#ff69b4;" onclick="calculatePeachBlossom()">🌸 测算桃花运</button>
+                </div>
+                <div id="peachResult"></div>
+            </div>
         </main>
         
         <!-- 底部导航 -->
@@ -416,6 +443,10 @@
             <div class="nav-item" onclick="showPage('marriage')">
                 <span class="icon">💑</span>
                 <span>配对</span>
+            </div>
+            <div class="nav-item" onclick="showPage('peach')">
+                <span class="icon">🌸</span>
+                <span>桃花</span>
             </div>
         </nav>
     </div>
@@ -476,6 +507,11 @@ function cacheDOM() {
     DOM.auspiciousResult = document.getElementById('auspiciousResult');
     DOM.almanacContent = document.getElementById('almanacContent');
     DOM.matchResult = document.getElementById('matchResult');
+    DOM.peachYear = document.getElementById('peachYear');
+    DOM.peachMonth = document.getElementById('peachMonth');
+    DOM.peachDay = document.getElementById('peachDay');
+    DOM.peachGender = document.getElementById('peachGender');
+    DOM.peachResult = document.getElementById('peachResult');
     DOM.pages = document.querySelectorAll('.page');
     DOM.navItems = document.querySelectorAll('.nav-item');
 }
@@ -690,7 +726,7 @@ const LunarCalendar = {
 function getLunarDate(date) { return LunarCalendar.getDate(date); }
 
 // ============ 页面导航模块 ============
-const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4});
+const NAV_INDEX = Object.freeze({home:0, fortune:1, auspicious:2, almanac:3, marriage:4, peach:5});
 
 function showPage(page) {
     // 使用缓存的DOM元素
@@ -728,6 +764,9 @@ function init() {
     
     // 初始化生肖选择框
     initZodiacSelectors();
+    
+    // 初始化桃花运选择框
+    initPeachSelectors();
 }
 
 function initBirthSelectors() {
@@ -755,6 +794,21 @@ function initZodiacSelectors() {
     Utils.populateSelect(DOM.femaleZodiac, CONFIG.SHENGXIAO);
     DOM.maleZodiac.value = '龙';
     DOM.femaleZodiac.value = '兔';
+}
+
+// 初始化桃花运选择框
+function initPeachSelectors() {
+    const years = Array.from({length: 85}, (_, i) => 2024 - i);
+    Utils.populateSelect(DOM.peachYear, years);
+    DOM.peachYear.value = '1990';
+    
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.peachMonth, months);
+    DOM.peachMonth.value = '6';
+    
+    const days = Array.from({length: 31}, (_, i) => i + 1);
+    Utils.populateSelect(DOM.peachDay, days);
+    DOM.peachDay.value = '15';
 }
 
 // ============ 八字计算模块 ============
@@ -1272,6 +1326,284 @@ function calculateMatch() {
 
 // 启动
 init();
+
+// ============ 桃花运计算模块 ============
+const PeachBlossom = {
+    // 基于年支计算桃花星位置
+    // 桃花星规则：寅午戌年桃花在卯，申子辰年桃花在酉，巳酉丑年桃花在午，亥卯未年桃花在子
+    getPeachBlossomStar(yearZhiIdx) {
+        // 地支索引: 0-子 1-丑 2-寅 3-卯 4-辰 5-巳 6-午 7-未 8-申 9-酉 10-戌 11-亥
+        const peachMap = {
+            2: {idx: 3, zhi: '卯'}, 6: {idx: 3, zhi: '卯'}, 10: {idx: 3, zhi: '卯'},  // 寅午戌年桃花在卯
+            8: {idx: 9, zhi: '酉'}, 0: {idx: 9, zhi: '酉'}, 4: {idx: 9, zhi: '酉'},   // 申子辰年桃花在酉
+            5: {idx: 6, zhi: '午'}, 9: {idx: 6, zhi: '午'}, 1: {idx: 6, zhi: '午'},   // 巳酉丑年桃花在午
+            11: {idx: 0, zhi: '子'}, 3: {idx: 0, zhi: '子'}, 7: {idx: 0, zhi: '子'}   // 亥卯未年桃花在子
+        };
+        return peachMap[yearZhiIdx] || {idx: 3, zhi: '卯'};
+    },
+    
+    // 获取与桃花星相关的地支（六合、三合）
+    getPeachRelatedZhi(peachStarIdx) {
+        // 六合关系
+        const liuheMap = {0:1, 1:0, 2:11, 11:2, 3:10, 10:3, 4:9, 9:4, 5:8, 8:5, 6:7, 7:6};
+        // 三合局
+        const sanheGroups = [[8,0,4], [11,3,7], [2,6,10], [5,9,1]];
+        
+        const related = {liuhe: [], sanhe: []};
+        
+        if (liuheMap[peachStarIdx] !== undefined) {
+            related.liuhe = [liuheMap[peachStarIdx]];
+        }
+        
+        for (const group of sanheGroups) {
+            if (group.includes(peachStarIdx)) {
+                related.sanhe = group.filter(z => z !== peachStarIdx);
+                break;
+            }
+        }
+        
+        return related;
+    },
+    
+    // 确定性计算一生中的桃花运时间段
+    calculatePeachPeriods(birthYear, birthMonth, birthDay, gender, yearZhiIdx, peachStarIdx) {
+        const periods = [];
+        const seed = birthYear * 10000 + birthMonth * 100 + birthDay;
+        const genderFactor = gender === '男' ? 1 : 0;
+        const peachRelated = this.getPeachRelatedZhi(peachStarIdx);
+        const currentYear = new Date().getFullYear();
+        const lifeSpan = 58;  // 分析到58岁
+        
+        for (let age = 18; age <= lifeSpan; age++) {  // 从18岁开始
+            const targetYear = birthYear + age;
+            const yearZhi = (targetYear - 4) % 12;
+            
+            let peachStrength = 0;
+            let peachType = '';
+            
+            // 流年地支正好是桃花星（+40%）
+            if (yearZhi === peachStarIdx) {
+                peachStrength += 40;
+                peachType = '流年桃花';
+            }
+            // 流年地支与桃花星六合（+30%）
+            else if (peachRelated.liuhe.includes(yearZhi)) {
+                peachStrength += 30;
+                peachType = '合桃花';
+            }
+            // 流年地支与桃花星三合（+25%）
+            else if (peachRelated.sanhe.includes(yearZhi)) {
+                peachStrength += 25;
+                peachType = '会桃花';
+            }
+            
+            // 大运影响（10年一运）
+            const dayunIdx = (Math.floor((age - 1) / 10) + genderFactor) % 12;
+            if (dayunIdx === peachStarIdx) {
+                peachStrength += 20;
+            } else if (peachRelated.liuhe.includes(dayunIdx)) {
+                peachStrength += 15;
+            }
+            
+            // 年龄修正
+            if (age >= 18 && age <= 35) {
+                peachStrength += 10;
+            } else if (age >= 36 && age <= 50) {
+                peachStrength += 5;
+            }
+            
+            // 性别修正
+            if (gender === '女' && age >= 25 && age <= 40) {
+                peachStrength += 5;
+            } else if (gender === '男' && age >= 28 && age <= 45) {
+                peachStrength += 5;
+            }
+            
+            // 确定性微调
+            const fineTune = Utils.deterministicInt(seed + age * 7, -5, 5);
+            peachStrength += fineTune;
+            
+            // 确保在合理范围内
+            peachStrength = Math.max(5, Math.min(98, peachStrength));
+            
+            if (peachStrength >= 35) {
+                periods.push({
+                    age: age,
+                    year: targetYear,
+                    strength: peachStrength,
+                    type: peachType || '平常桃花',
+                    isPast: targetYear < currentYear,
+                    isCurrent: targetYear === currentYear
+                });
+            }
+        }
+        
+        return periods;
+    },
+    
+    // 确定性判断桃花质量
+    getPeachQuality(strength, age, gender, seed) {
+        const qualitySeed = seed + strength * 3 + age * 11;
+        
+        let maturityBase;
+        if (age >= 22 && age <= 35) {
+            maturityBase = 70;
+        } else if ((age >= 18 && age < 22) || (age >= 36 && age <= 45)) {
+            maturityBase = 55;
+        } else {
+            maturityBase = 40;
+        }
+        
+        let maturity = maturityBase + Utils.deterministicInt(qualitySeed, -10, 20);
+        maturity = Math.max(20, Math.min(95, maturity));
+        
+        let quality, qualityDesc, qualityColor;
+        if (strength >= 70 && maturity >= 70) {
+            quality = '正缘桃花';
+            qualityDesc = '此桃花为正缘之兆，有望遇到真心人，宜把握机会。';
+            qualityColor = 'var(--green)';
+        } else if (strength >= 60 && maturity >= 55) {
+            quality = '良缘桃花';
+            qualityDesc = '桃花运较旺，感情机会较多，应渗重选择。';
+            qualityColor = 'var(--cyan)';
+        } else if (strength >= 45) {
+            quality = '普通桃花';
+            qualityDesc = '桃花运平平，有异性缘但不明显，须主动争取。';
+            qualityColor = 'var(--gold-dark)';
+        } else {
+            quality = '浅淡桃花';
+            qualityDesc = '桃花运较弱，感情缘分不深，宜修身养性等待时机。';
+            qualityColor = 'var(--text-dim)';
+        }
+        
+        return {quality, qualityDesc, qualityColor, maturity};
+    }
+};
+
+// 桃花星含义
+const PEACH_MEANINGS = {
+    '子': '桃花在子（属鼠）：水地桃花，聪明灵利，异性缘佳，桃花来得早且快，感情世界丰富多彩。',
+    '卯': '桃花在卯（属兔）：木地桃花，温柔文雅，感情细腻，容易吸引异性追求，但需防感情纠葥。',
+    '午': '桃花在午（属马）：火地桃花，热情开朗，魅力四射，感情来得快也旺，但需防感情冲动。',
+    '酉': '桃花在酉（属鸡）：金地桃花，外貌出众，幽雅迷人，桃花质量高，容易遇到优质对象。'
+};
+
+function calculatePeachBlossom() {
+    const year = parseInt(DOM.peachYear.value);
+    const month = parseInt(DOM.peachMonth.value);
+    const day = parseInt(DOM.peachDay.value);
+    const gender = DOM.peachGender.value;
+    
+    if (!year || year < 1940 || year > 2024 || !month || !day) {
+        DOM.peachResult.innerHTML = '<div class="card" style="text-align:center;color:var(--red);">请输入有效的出生日期</div>';
+        return;
+    }
+    
+    // 计算年支和桃花星
+    const yearZhiIdx = (year - 4) % 12;
+    const yearZhi = CONFIG.DIZHI[yearZhiIdx];
+    const shengxiao = CONFIG.SHENGXIAO[yearZhiIdx];
+    const peachStar = PeachBlossom.getPeachBlossomStar(yearZhiIdx);
+    
+    // 计算桃花运时段
+    const periods = PeachBlossom.calculatePeachPeriods(year, month, day, gender, yearZhiIdx, peachStar.idx);
+    
+    // 筛选显著的桃花年份（只显示18-58岁）
+    const filteredPeriods = periods.filter(p => p.age >= 18 && p.age <= 58);
+    let topPeriods = [...filteredPeriods].sort((a, b) => b.strength - a.strength).slice(0, 15);
+    topPeriods = topPeriods.sort((a, b) => a.age - b.age);
+    
+    const seed = year * 10000 + month * 100 + day;
+    const currentYear = new Date().getFullYear();
+    
+    // 生成桃花时间段HTML（包含栏目说明）
+    const headerHtml = `
+        <div style="display:flex;align-items:center;background:var(--bg-card);border-radius:8px;padding:6px 10px;margin-bottom:8px;gap:8px;">
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:110px;">年龄/年份</span>
+            <span style="flex:1;color:var(--text-dim);font-size:0.8rem;font-weight:bold;text-align:center;">强度</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:45px;text-align:center;"></span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:65px;text-align:center;">桃花质量</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;font-weight:bold;min-width:60px;text-align:center;">成熟度</span>
+        </div>
+    `;
+    let periodsHtml = headerHtml + topPeriods.map(p => {
+        const ageText = p.isCurrent ? `${p.age}岁 (${p.year}年) ★当前` : `${p.age}岁 (${p.year}年)`;
+        const ageColor = p.isCurrent ? 'var(--gold)' : (p.isPast ? 'var(--text-dim)' : 'var(--text)');
+        const barColor = p.strength >= 60 ? '#ff69b4' : (p.strength >= 45 ? '#ffc0cb' : '#d3d3d3');
+        const q = PeachBlossom.getPeachQuality(p.strength, p.age, gender, seed);
+        
+        return `
+            <div style="display:flex;align-items:center;background:var(--bg-hover);border-radius:8px;padding:8px 10px;margin:5px 0;gap:8px;">
+                <span style="color:${ageColor};font-size:0.85rem;min-width:110px;">${ageText}</span>
+                <div style="flex:1;height:12px;background:var(--bg-card);border-radius:6px;overflow:hidden;">
+                    <div style="height:100%;width:${p.strength}%;background:${barColor};border-radius:6px;"></div>
+                </div>
+                <span style="color:#ff69b4;font-weight:bold;font-size:0.85rem;min-width:45px;text-align:center;">${p.strength}%</span>
+                <span style="color:${q.qualityColor};font-size:0.8rem;min-width:65px;text-align:center;">${q.quality}</span>
+                <span style="color:var(--text-dim);font-size:0.75rem;min-width:60px;text-align:center;">${q.maturity}%</span>
+            </div>
+        `;
+    }).join('');
+    
+    // 统计桃花运特征（18-58岁范围）
+    const highPeriods = periods.filter(p => p.strength >= 60 && p.age >= 18 && p.age <= 58);
+    const futureHigh = highPeriods.filter(p => !p.isPast);
+    
+    let summaryTexts = [];
+    if (highPeriods.length >= 5) {
+        summaryTexts.push(`● 您一生桃花运较旺，共有${highPeriods.length}个显著桃花年，异性缘分较好。`);
+    } else if (highPeriods.length >= 2) {
+        summaryTexts.push(`● 您一生桃花运中等，共有${highPeriods.length}个显著桃花年，需把握重要时机。`);
+    } else {
+        summaryTexts.push('● 您一生桃花运较淡，异性缘需主动争取，不宜坐等。');
+    }
+    
+    if (futureHigh.length > 0) {
+        const nextPeak = futureHigh.reduce((a, b) => a.year < b.year ? a : b);
+        summaryTexts.push(`● 您未来最近的桃花旺年在${nextPeak.year}年（${nextPeak.age}岁），强度${nextPeak.strength}%。`);
+    }
+    
+    if (gender === '男') {
+        summaryTexts.push('● 男命桃花旺时，容易遇到心仪对象，但需防烂桃花影响家庭和睦。');
+    } else {
+        summaryTexts.push('● 女命桃花旺时，容易被追求，但需明辨真心，防止被花言巧语迷惑。');
+    }
+    
+    const meaning = PEACH_MEANINGS[peachStar.zhi] || '桃花星特质独特，异性缘丰富。';
+    
+    DOM.peachResult.innerHTML = `
+        <div class="card">
+            <div class="card-title" style="color:#ff69b4;">🌸 桃花运分析报告</div>
+            
+            <div style="background:var(--bg-hover);border-radius:8px;padding:12px;margin:10px 0;">
+                <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                    <span>🐲 ${shengxiao}年生</span>
+                    <span>年支：${yearZhi}</span>
+                    <span>${gender}性</span>
+                    <span style="color:#ff69b4;font-weight:bold;">🌸 桃花星：${peachStar.zhi}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">桃花星解读</div>
+            <div style="font-size:0.9rem;padding:5px 0;">● ${meaning}</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">一生桃花运时间段（18-58岁）</div>
+            ${periodsHtml}
+        </div>
+        
+        <div class="card">
+            <div class="card-title" style="color:var(--cyan);">桃花运综述</div>
+            ${summaryTexts.map(t => `<div style="font-size:0.9rem;padding:5px 0;">${t}</div>`).join('')}
+            <div style="font-size:0.8rem;color:var(--text-dim);margin-top:10px;">📚 命理依据：本分析基于《三命通会》桃花星理论，结合年支、流年、大运等因素综合分析。</div>
+        </div>
+        
+        <div class="hint-text">✨ 桃花开时，缘分自来，以上仅供参考 ✨</div>
+    `;
+}
 </script>
 </body>
 </html>

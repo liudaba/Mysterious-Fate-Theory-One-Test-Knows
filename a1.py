@@ -6,6 +6,7 @@
     - 黄道吉日：择日择时、事项吉日查询
     - 老黄历：每日宜忌、农历信息
     - 婚姻配对：生肖配对、契合度分析
+    - 桃花运：桃花运势分析、姻缘时机预测
 
 Author: Mystery Fortune Team
 """
@@ -242,6 +243,7 @@ class MysteryFortuneApp:
             ("📅", "黄道吉日", self.show_auspicious_days),
             ("📜", "老 黄 历", self.show_almanac),
             ("💑", "婚姻配对", self.show_marriage_match),
+            ("🌸", "桃 花 运", self.show_peach_blossom),
         ]
         
         self.nav_buttons = []
@@ -317,6 +319,7 @@ class MysteryFortuneApp:
             ("📅", "黄道吉日", "择日择时、婚嫁吉日\n开业搬家、出行良辰", self.colors['green']),
             ("📜", "老 黄 历", "每日宜忌、农历信息\n节气物候、传统文化", self.colors['gold_dark']),
             ("💑", "婚姻配对", "生肖配对、八字合婚\n姻缘分析、幸福指数", self.colors['red']),
+            ("🌸", "桃 花 运", "桃花运势、姻缘时机\n感情分析、缘分预测", '#ff69b4'),
         ]
         
         for i, (icon, title, desc, color) in enumerate(features):
@@ -1100,6 +1103,397 @@ class MysteryFortuneApp:
         tk.Label(scroll_frame, text="✨ 愿有情人终成眷属 ✨", 
                 font=("Microsoft YaHei", 11, "bold"),
                 fg=self.colors['gold'], bg=self.colors['bg_hover']).pack(pady=15)
+    
+    # ============ 桃花运功能模块 ============
+    def _get_peach_blossom_star(self, year_zhi_idx: int) -> Tuple[int, str]:
+        """基于年支计算桃花星位置
+        
+        桃花星规则（寅午戌年桃花在卯，申子辰年桃花在酉，巳酉丑年桃花在午，亥卯未年桃花在子）
+        """
+        # 地支索引: 0-子 1-丑 2-寅 3-卯 4-辰 5-巳 6-午 7-未 8-申 9-酉 10-戌 11-亥
+        peach_map = {
+            2: (3, '卯'), 6: (3, '卯'), 10: (3, '卯'),  # 寅午戌年桃花在卯
+            8: (9, '酉'), 0: (9, '酉'), 4: (9, '酉'),   # 申子辰年桃花在酉
+            5: (6, '午'), 9: (6, '午'), 1: (6, '午'),   # 巳酉丑年桃花在午
+            11: (0, '子'), 3: (0, '子'), 7: (0, '子'),  # 亥卯未年桃花在子
+        }
+        return peach_map.get(year_zhi_idx, (3, '卯'))
+    
+    def _calculate_peach_periods(self, birth_year: int, birth_month: int, birth_day: int, 
+                                  gender: str, year_zhi_idx: int, peach_star_idx: int) -> List[Dict]:
+        """确定性计算一生中的桃花运时间段
+        
+        基于：
+        1. 流年地支与桃花星的关系
+        2. 大运周期
+        3. 性别影响（男女起运不同）
+        """
+        periods = []
+        seed = birth_year * 10000 + birth_month * 100 + birth_day
+        gender_factor = 1 if gender == '男' else 0
+        
+        # 桃花星相关的地支（桃花星本位、六合位、三合位）
+        peach_related = self._get_peach_related_zhi(peach_star_idx)
+        
+        current_year = datetime.now().year
+        life_span = 58  # 分析到58岁
+        
+        for age in range(18, life_span + 1):  # 从18岁开始
+            target_year = birth_year + age
+            year_zhi = (target_year - 4) % 12
+            
+            # 计算该年的桃花运强度
+            peach_strength = 0
+            peach_type = ""
+            
+            # 流年地支正好是桃花星（+40%）
+            if year_zhi == peach_star_idx:
+                peach_strength += 40
+                peach_type = "流年桃花"
+            # 流年地支与桃花星六合（+30%）
+            elif year_zhi in peach_related['liuhe']:
+                peach_strength += 30
+                peach_type = "合桃花"
+            # 流年地支与桃花星三合（+25%）
+            elif year_zhi in peach_related['sanhe']:
+                peach_strength += 25
+                peach_type = "会桃花"
+            
+            # 大运影响（10年一运）
+            dayun_idx = ((age - 1) // 10 + gender_factor) % 12
+            if dayun_idx == peach_star_idx:
+                peach_strength += 20
+            elif dayun_idx in peach_related['liuhe']:
+                peach_strength += 15
+            
+            # 年龄修正（青年期桃花更旺）
+            if 18 <= age <= 35:
+                peach_strength += 10
+            elif 36 <= age <= 50:
+                peach_strength += 5
+            
+            # 性别修正
+            if gender == '女' and 25 <= age <= 40:
+                peach_strength += 5
+            elif gender == '男' and 28 <= age <= 45:
+                peach_strength += 5
+            
+            # 确定性微调（基于生日种子）
+            fine_tune = self._deterministic_int(seed + age * 7, -5, 5)
+            peach_strength += fine_tune
+            
+            # 确保在合理范围内
+            peach_strength = max(5, min(98, peach_strength))
+            
+            if peach_strength >= 35:  # 只记录较显著的桃花年
+                periods.append({
+                    'age': age,
+                    'year': target_year,
+                    'strength': peach_strength,
+                    'type': peach_type if peach_type else "平常桃花",
+                    'is_past': target_year < current_year,
+                    'is_current': target_year == current_year
+                })
+        
+        return periods
+    
+    def _get_peach_related_zhi(self, peach_star_idx: int) -> Dict[str, List[int]]:
+        """获取与桃花星相关的地支（六合、三合）"""
+        # 六合关系
+        liuhe_map = {0:1, 1:0, 2:11, 11:2, 3:10, 10:3, 4:9, 9:4, 5:8, 8:5, 6:7, 7:6}
+        # 三合局
+        sanhe_groups = [[8,0,4], [11,3,7], [2,6,10], [5,9,1]]  # 申子辰、亥卯未、寅午戌、巳酉丑
+        
+        related = {'liuhe': [], 'sanhe': []}
+        
+        # 六合
+        if peach_star_idx in liuhe_map:
+            related['liuhe'] = [liuhe_map[peach_star_idx]]
+        
+        # 三合
+        for group in sanhe_groups:
+            if peach_star_idx in group:
+                related['sanhe'] = [z for z in group if z != peach_star_idx]
+                break
+        
+        return related
+    
+    def _get_peach_quality(self, strength: int, age: int, gender: str, seed: int) -> Tuple[str, str, str]:
+        """确定性判断桃花质量（好坏程度）"""
+        # 基于强度和年龄确定桃花质量
+        quality_seed = seed + strength * 3 + age * 11
+        
+        # 计算成熟度（桃花是否成熟）
+        if 22 <= age <= 35:
+            maturity_base = 70
+        elif 18 <= age < 22 or 36 <= age <= 45:
+            maturity_base = 55
+        else:
+            maturity_base = 40
+        
+        maturity = maturity_base + self._deterministic_int(quality_seed, -10, 20)
+        maturity = max(20, min(95, maturity))
+        
+        # 判断桃花类型
+        if strength >= 70 and maturity >= 70:
+            quality = "正缘桃花"
+            quality_desc = "此桃花为正缘之兆，有望遇到真心人，宜把握机会。"
+            quality_color = '#22c55e'
+        elif strength >= 60 and maturity >= 55:
+            quality = "良缘桃花"
+            quality_desc = "桃花运较旺，感情机会较多，应渗重选择。"
+            quality_color = '#00d4ff'
+        elif strength >= 45:
+            quality = "普通桃花"
+            quality_desc = "桃花运平平，有异性缘但不明显，须主动争取。"
+            quality_color = '#ffc107'
+        else:
+            quality = "浅淡桃花"
+            quality_desc = "桃花运较弱，感情缘分不深，宜修身养性等待时机。"
+            quality_color = '#a0a0a0'
+        
+        return quality, quality_desc, quality_color, maturity
+    
+    def show_peach_blossom(self):
+        """显示桃花运界面"""
+        self.clear_content()
+        self.create_panel_title("🌸", "桃花运", "探测姻缘时机，把握幸福机遇")
+        
+        # 输入区域
+        input_frame = tk.Frame(self.content_frame, bg=self.colors['bg_card'])
+        input_frame.pack(fill=tk.X, padx=20, pady=15)
+        
+        # 生日输入
+        tk.Label(input_frame, text="出生日期：", font=("Microsoft YaHei", 12),
+                fg=self.colors['text'], bg=self.colors['bg_card']).grid(row=0, column=0, sticky="w", pady=5, padx=5)
+        
+        date_frame = tk.Frame(input_frame, bg=self.colors['bg_card'])
+        date_frame.grid(row=0, column=1, padx=10)
+        
+        self.peach_year_var = tk.StringVar(value="1990")
+        self.peach_month_var = tk.StringVar(value="6")
+        self.peach_day_var = tk.StringVar(value="15")
+        
+        years = [str(y) for y in range(1940, 2025)]
+        ttk.Combobox(date_frame, textvariable=self.peach_year_var, values=years, width=6).pack(side=tk.LEFT)
+        tk.Label(date_frame, text="年", fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=2)
+        
+        ttk.Combobox(date_frame, textvariable=self.peach_month_var, values=[str(m) for m in range(1,13)], width=4).pack(side=tk.LEFT)
+        tk.Label(date_frame, text="月", fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=2)
+        
+        ttk.Combobox(date_frame, textvariable=self.peach_day_var, values=[str(d) for d in range(1,32)], width=4).pack(side=tk.LEFT)
+        tk.Label(date_frame, text="日", fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=2)
+        
+        # 性别选择
+        tk.Label(input_frame, text="性别：", font=("Microsoft YaHei", 12),
+                fg=self.colors['text'], bg=self.colors['bg_card']).grid(row=0, column=2, padx=(20, 5))
+        
+        self.peach_gender_var = tk.StringVar(value="男")
+        gender_frame = tk.Frame(input_frame, bg=self.colors['bg_card'])
+        gender_frame.grid(row=0, column=3)
+        
+        ttk.Radiobutton(gender_frame, text="男", variable=self.peach_gender_var, value="男").pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(gender_frame, text="女", variable=self.peach_gender_var, value="女").pack(side=tk.LEFT, padx=5)
+        
+        # 测算按钮
+        calc_btn = tk.Button(input_frame, text="🌸 测算桃花运", font=("Microsoft YaHei", 12, "bold"),
+                            bg='#ff69b4', fg="white", padx=20, pady=8,
+                            cursor="hand2", command=self.calculate_peach_blossom)
+        calc_btn.grid(row=0, column=4, padx=20)
+        
+        # 结果区域
+        self.peach_result = tk.Frame(self.content_frame, bg=self.colors['bg_hover'])
+        self.peach_result.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+    
+    def calculate_peach_blossom(self):
+        """计算并显示桃花运结果"""
+        for widget in self.peach_result.winfo_children():
+            widget.destroy()
+        
+        # 获取输入
+        try:
+            year = int(self.peach_year_var.get())
+            month = int(self.peach_month_var.get())
+            day = int(self.peach_day_var.get())
+            gender = self.peach_gender_var.get()
+            
+            if not (1940 <= year <= 2024 and 1 <= month <= 12 and 1 <= day <= 31):
+                raise ValueError("日期范围错误")
+        except ValueError as e:
+            tk.Label(self.peach_result, text=f"❌ 请输入有效的出生日期", 
+                    font=("Microsoft YaHei", 14),
+                    fg=self.colors['red'], bg=self.colors['bg_hover']).pack(pady=50)
+            return
+        
+        # 计算年支和桃花星
+        year_zhi_idx = (year - 4) % 12
+        year_zhi = self.dizhi[year_zhi_idx]
+        shengxiao = self.shengxiao[year_zhi_idx]
+        peach_star_idx, peach_star = self._get_peach_blossom_star(year_zhi_idx)
+        
+        # 计算桃花运时段
+        periods = self._calculate_peach_periods(year, month, day, gender, year_zhi_idx, peach_star_idx)
+        
+        # 创建可滚动区域
+        canvas, scroll_frame = self._create_scrollable_frame(self.peach_result, width=720)
+        
+        # 标题
+        tk.Label(scroll_frame, text="🌸 桃花运分析报告", 
+                font=("Microsoft YaHei", 16, "bold"),
+                fg='#ff69b4', bg=self.colors['bg_hover']).pack(pady=15)
+        
+        # === 基本信息 ===
+        info_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        info_frame.pack(fill=tk.X, padx=15, pady=5)
+        
+        info_row = tk.Frame(info_frame, bg=self.colors['bg_card'])
+        info_row.pack(fill=tk.X, padx=10, pady=8)
+        
+        tk.Label(info_row, text="① 命主信息", font=("Microsoft YaHei", 12, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=5)
+        
+        tk.Label(info_row, text=f"  🐲{shengxiao}年生  年支：{year_zhi}  {gender}性", 
+                font=("Microsoft YaHei", 11),
+                fg=self.colors['text'], bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(info_row, text=f"  🌸桃花星：{peach_star}", 
+                font=("Microsoft YaHei", 11, "bold"),
+                fg='#ff69b4', bg=self.colors['bg_card']).pack(side=tk.LEFT, padx=10)
+        
+        # === 桃花星解读 ===
+        peach_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        peach_frame.pack(fill=tk.X, padx=15, pady=5)
+        
+        tk.Label(peach_frame, text="② 桃花星解读", font=("Microsoft YaHei", 12, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_card']).pack(anchor="w", padx=10, pady=8)
+        
+        peach_meanings = {
+            '子': "桃花在子（属鼠）：水地桃花，聪明灵利，异性缘佳，桃花来得早且快，感情世界丰富多彩。",
+            '卯': "桃花在卯（属兔）：木地桃花，温柔文雅，感情细腻，容易吸引异性追求，但需防感情纠葥。",
+            '午': "桃花在午（属马）：火地桃花，热情开朗，魅力四射，感情来得快也旺，但需防感情冲动。",
+            '酉': "桃花在酉（属鸡）：金地桃花，外貌出众，幽雅迷人，桃花质量高，容易遇到优质对象。"
+        }
+        
+        meaning = peach_meanings.get(peach_star, "桃花星特质独特，异性缘丰富。")
+        tk.Label(peach_frame, text=f"  ● {meaning}", font=("Microsoft YaHei", 10),
+                fg=self.colors['text'], bg=self.colors['bg_card'],
+                wraplength=650, justify=tk.LEFT).pack(anchor="w", padx=15, pady=5)
+        
+        # === 一生桃花运时间段 ===
+        timeline_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        timeline_frame.pack(fill=tk.X, padx=15, pady=5)
+        
+        tk.Label(timeline_frame, text="③ 一生桃花运时间段（18-58岁）", font=("Microsoft YaHei", 12, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_card']).pack(anchor="w", padx=10, pady=8)
+        
+        # 筛选显著的桃花年份（只显示18-58岁）
+        filtered_periods = [p for p in periods if 18 <= p['age'] <= 58]
+        top_periods = sorted(filtered_periods, key=lambda x: x['strength'], reverse=True)[:15]
+        top_periods = sorted(top_periods, key=lambda x: x['age'])  # 按年龄排序
+        
+        current_year = datetime.now().year
+        seed = year * 10000 + month * 100 + day
+        
+        # 添加栏目说明行
+        header_row = tk.Frame(timeline_frame, bg=self.colors['bg_card'])
+        header_row.pack(fill=tk.X, padx=10, pady=(0, 5))
+        
+        tk.Label(header_row, text="年龄/年份", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=16, anchor="w").pack(side=tk.LEFT, padx=8)
+        tk.Label(header_row, text="强度", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=26, anchor="center").pack(side=tk.LEFT, padx=5)
+        tk.Label(header_row, text="", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=5).pack(side=tk.LEFT, padx=5)
+        tk.Label(header_row, text="桃花质量", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=9, anchor="center").pack(side=tk.LEFT, padx=5)
+        tk.Label(header_row, text="成熟度", font=("Microsoft YaHei", 9, "bold"),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'], width=10, anchor="center").pack(side=tk.LEFT, padx=5)
+        
+        for p in top_periods:
+            period_row = tk.Frame(timeline_frame, bg=self.colors['bg_hover'])
+            period_row.pack(fill=tk.X, padx=10, pady=3)
+            
+            # 年龄和年份
+            age_text = f"{p['age']}岁 ({p['year']}年)"
+            if p['is_current']:
+                age_text += " ★当前"
+                age_color = self.colors['gold']
+            elif p['is_past']:
+                age_color = self.colors['text_dim']
+            else:
+                age_color = self.colors['text']
+            
+            tk.Label(period_row, text=age_text, font=("Microsoft YaHei", 10),
+                    fg=age_color, bg=self.colors['bg_hover'], width=16, anchor="w").pack(side=tk.LEFT, padx=8, pady=6)
+            
+            # 桃花强度进度条
+            bar_bg = tk.Frame(period_row, bg=self.colors['bg_card'], width=200, height=14)
+            bar_bg.pack(side=tk.LEFT, padx=5)
+            bar_bg.pack_propagate(False)
+            
+            bar_width = int(p['strength'] * 2)
+            bar_color = '#ff69b4' if p['strength'] >= 60 else '#ffc0cb' if p['strength'] >= 45 else '#d3d3d3'
+            bar_fg = tk.Frame(bar_bg, bg=bar_color, width=bar_width, height=14)
+            bar_fg.pack(side=tk.LEFT)
+            
+            # 百分比
+            tk.Label(period_row, text=f"{p['strength']}%", font=("Microsoft YaHei", 10, "bold"),
+                    fg='#ff69b4', bg=self.colors['bg_hover'], width=5).pack(side=tk.LEFT, padx=5)
+            
+            # 桃花质量
+            quality, quality_desc, quality_color, maturity = self._get_peach_quality(p['strength'], p['age'], gender, seed)
+            tk.Label(period_row, text=f"{quality}", font=("Microsoft YaHei", 9),
+                    fg=quality_color, bg=self.colors['bg_hover'], width=9, anchor="center").pack(side=tk.LEFT, padx=5)
+            
+            # 成熟度
+            tk.Label(period_row, text=f"{maturity}%", font=("Microsoft YaHei", 9),
+                    fg=self.colors['text_dim'], bg=self.colors['bg_hover'], width=10, anchor="center").pack(side=tk.LEFT, padx=5)
+        
+        # === 桃花运综述 ===
+        summary_frame = tk.Frame(scroll_frame, bg=self.colors['bg_card'])
+        summary_frame.pack(fill=tk.X, padx=15, pady=8)
+        
+        tk.Label(summary_frame, text="④ 桃花运综述", font=("Microsoft YaHei", 12, "bold"),
+                fg=self.colors['cyan'], bg=self.colors['bg_card']).pack(anchor="w", padx=10, pady=8)
+        
+        # 统计桃花运特征（18-58岁范围）
+        high_periods = [p for p in periods if p['strength'] >= 60 and 18 <= p['age'] <= 58]
+        future_high = [p for p in high_periods if not p['is_past']]
+        
+        summary_texts = []
+        
+        if len(high_periods) >= 5:
+            summary_texts.append(f"● 您一生桃花运较旺，共有{len(high_periods)}个显著桃花年，异性缘分较好。")
+        elif len(high_periods) >= 2:
+            summary_texts.append(f"● 您一生桃花运中等，共有{len(high_periods)}个显著桃花年，需把握重要时机。")
+        else:
+            summary_texts.append("● 您一生桃花运较淡，异性缘需主动争取，不宜坐等。")
+        
+        if future_high:
+            next_peak = min(future_high, key=lambda x: x['year'])
+            summary_texts.append(f"● 您未来最近的桃花旺年在{next_peak['year']}年（{next_peak['age']}岁），强度{next_peak['strength']}%。")
+        
+        # 基于性别的建议
+        if gender == '男':
+            summary_texts.append("● 男命桃花旺时，容易遇到心仪对象，但需防烂桃花影响家庭和睦。")
+        else:
+            summary_texts.append("● 女命桃花旺时，容易被追求，但需明辨真心，防止被花言巧语迷惑。")
+        
+        for text in summary_texts:
+            tk.Label(summary_frame, text=text, font=("Microsoft YaHei", 10),
+                    fg=self.colors['text'], bg=self.colors['bg_card'],
+                    wraplength=650, justify=tk.LEFT).pack(anchor="w", padx=15, pady=4)
+        
+        # 命理依据
+        tk.Label(summary_frame, text="📚 命理依据：本分析基于《三命通会》桃花星理论，结合年支、流年、大运等因素综合分析。", 
+                font=("Microsoft YaHei", 9),
+                fg=self.colors['text_dim'], bg=self.colors['bg_card'],
+                wraplength=650).pack(anchor="w", padx=15, pady=(8, 5))
+        
+        # 结束语
+        tk.Label(scroll_frame, text="✨ 桃花开时，缘分自来，以上仅供参考 ✨", 
+                font=("Microsoft YaHei", 11, "bold"),
+                fg='#ff69b4', bg=self.colors['bg_hover']).pack(pady=20)
     
     def get_lunar_date(self, date):
         # 2025年农历基准：2025年1月29日 = 农历乙巳年正月初一
